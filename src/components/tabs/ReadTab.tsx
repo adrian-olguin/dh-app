@@ -1,0 +1,216 @@
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BookOpen, Calendar, CalendarIcon, Download, Check, Minus, Plus, RotateCcw } from "lucide-react";
+import { ShareButton } from "@/components/ShareButton";
+import { useState } from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
+import { es, pt } from "date-fns/locale";
+import { cn } from "@/lib/utils";
+import { useOfflineContent } from "@/hooks/useOfflineContent";
+import { useTranslation } from "react-i18next";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
+
+interface Article {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  verse: string;
+  image_url: string;
+  published_at: string;
+  date: string;
+}
+
+export const ReadTab = () => {
+  const { t, i18n } = useTranslation();
+  const [selectedDate, setSelectedDate] = useState<Date>();
+  const { saveContent, isContentSaved } = useOfflineContent();
+  const [fontSize, setFontSize] = useState(15);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  
+  const getLocale = () => {
+    switch (i18n.language) {
+      case 'es':
+        return es;
+      case 'pt':
+        return pt;
+      default:
+        return undefined;
+    }
+  };
+
+  const { data: articles = [], isLoading, error, refetch } = useQuery({
+    queryKey: ['devotional-articles', i18n.language],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke('fetch-pastor-rick-content', {
+        body: { 
+          type: 'devotional',
+          language: i18n.language 
+        }
+      });
+      
+      if (error) throw error;
+      if (!data?.success || !data?.articles) {
+        throw new Error('Failed to fetch devotionals');
+      }
+      
+      return data.articles.map((article: any) => ({
+        id: article.id,
+        title: article.title,
+        excerpt: article.excerpt,
+        content: article.content,
+        verse: article.verse,
+        image_url: article.image_url,
+        published_at: article.published_at,
+        date: new Date(article.published_at).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', { 
+          year: 'numeric', 
+          month: 'long', 
+          day: 'numeric' 
+        }),
+      })) as Article[];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+
+
+  if (error) {
+    toast.error('Failed to load devotionals. Click retry to try again.');
+  }
+
+  const increaseFontSize = () => {
+    setFontSize(prev => Math.min(prev + 2, 23));
+  };
+
+  const decreaseFontSize = () => {
+    setFontSize(prev => Math.max(prev - 2, 11));
+  };
+
+  const resetFontSize = () => {
+    setFontSize(15);
+  };
+
+  const handleDownload = (article: Article) => {
+    saveContent({
+      id: article.id,
+      type: "devotional",
+      title: article.title,
+      date: article.date,
+      content: article,
+    });
+  };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="pb-4 pt-4 px-4 max-w-2xl mx-auto">
+        <Card className="mb-6 shadow-soft overflow-hidden">
+          <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/5 p-6">
+            <Skeleton className="h-8 w-3/4 mb-6" />
+            <Skeleton className="h-48 w-full mb-6 rounded-lg" />
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!articles.length) {
+    return (
+      <div className="pb-4 pt-4 px-4 max-w-2xl mx-auto">
+        <div className="flex flex-col items-center justify-center h-64 gap-4">
+          <p className="text-muted-foreground">No devotionals available</p>
+          <Button onClick={() => refetch()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
+
+  const currentArticle = selectedArticle || articles[0];
+  const isSaved = isContentSaved(currentArticle.id);
+
+  // Function to strip images from HTML content to avoid duplicates
+  const stripImagesFromContent = (html: string) => {
+    return html.replace(/<img[^>]*>/gi, '');
+  };
+
+  // Expanded view
+  if (selectedArticle) {
+    return (
+      <div className="pb-4 pt-4 px-4 max-w-2xl mx-auto">
+        <Button variant="ghost" size="sm" onClick={() => setSelectedArticle(null)} className="mb-4">
+          ← Back
+        </Button>
+        <Card className="shadow-elevated overflow-hidden">
+          <CardHeader className="pb-6 pt-8 px-8 bg-muted/30">
+            <CardTitle className="text-2xl mb-4">{selectedArticle.title}</CardTitle>
+            {selectedArticle.verse && (
+              <blockquote className="border-l-4 border-primary pl-4 italic" style={{ fontSize: `${fontSize}px` }}>
+                {selectedArticle.verse}
+              </blockquote>
+            )}
+          </CardHeader>
+          <CardContent className="pt-8 px-8 pb-8">
+            {selectedArticle.image_url && (
+              <img src={selectedArticle.image_url} alt={selectedArticle.title} className="w-full h-64 object-cover rounded-lg mb-6" />
+            )}
+            <div 
+              style={{ fontSize: `${fontSize}px` }} 
+              className="prose prose-lg dark:prose-invert max-w-none [&>p]:mb-4 [&>p]:leading-relaxed [&>h2]:mt-6 [&>h2]:mb-4 [&>h3]:mt-4 [&>h3]:mb-3 [&>ul]:mb-4 [&>ol]:mb-4 [&>blockquote]:border-l-4 [&>blockquote]:border-primary [&>blockquote]:pl-4 [&>blockquote]:italic [&>blockquote]:my-4"
+              dangerouslySetInnerHTML={{ __html: stripImagesFromContent(selectedArticle.content) }} 
+            />
+            <div className="pt-6">
+              <ShareButton title={selectedArticle.title} text={selectedArticle.excerpt} label="Share" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // List view
+  return (
+    <div className="pb-4 pt-4 px-4 max-w-md mx-auto">
+      <Card className="mb-6 shadow-soft overflow-hidden">
+        <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/5 p-6">
+          <h2 className="text-lg font-semibold mb-2">{articles[0].title}</h2>
+          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{articles[0].excerpt}</p>
+          <p className="text-xs text-muted-foreground mb-4">{articles[0].date}</p>
+          {articles[0].image_url && (
+            <img src={articles[0].image_url} alt={articles[0].title} className="w-full h-48 object-cover rounded-lg mb-6" />
+          )}
+          <Button onClick={() => setSelectedArticle(articles[0])} className="w-full">{t('read.readToday')}</Button>
+        </div>
+      </Card>
+
+      <h2 className="text-lg font-semibold mb-3 flex items-center gap-2">
+        <BookOpen className="w-5 h-5 text-primary" />
+        {t('read.recentDevotionals')}
+      </h2>
+
+      <div className="space-y-3">
+        {articles.slice(1, 7).map((article) => (
+          <Card key={article.id} onClick={() => setSelectedArticle(article)} className="cursor-pointer hover:shadow-soft transition-all">
+            <CardContent className="flex items-center gap-4 p-0">
+              {article.image_url && (
+                <img src={article.image_url} alt={article.title} className="w-32 h-24 object-cover rounded-none" />
+              )}
+              <div className="flex-1 py-4 pr-4">
+                <p className="font-semibold text-base line-clamp-2 mb-1">{article.title}</p>
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{article.excerpt}</p>
+                <p className="text-xs text-muted-foreground">{article.date}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+};

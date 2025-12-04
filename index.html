@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+    <title>Daily Hope with Pastor Rick</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="description" content="Start your day with Daily Hope - inspiring devotionals, sermons, and messages from Pastor Rick Warren. Watch videos, listen to podcasts, read daily devotionals, and grow in faith." />
+    <meta name="author" content="Daily Hope Ministries" />
+    <meta name="keywords" content="Daily Hope, Pastor Rick Warren, devotional, faith, Christian ministry, daily devotional, sermon, podcast" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#2950b8" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- iOS Specific -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Daily Hope" />
+    
+    <!-- Android Specific -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dailyhope.com" />
+    <meta property="og:title" content="Daily Hope with Pastor Rick Warren" />
+    <meta property="og:description" content="Start your day with inspiring devotionals, sermons, and messages from Pastor Rick Warren. Watch, listen, and read daily devotionals that strengthen your faith." />
+    <meta property="og:image" content="/images/daily-hope-preview.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Daily Hope" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:url" content="https://dailyhope.com" />
+    <meta name="twitter:title" content="Daily Hope with Pastor Rick Warren" />
+    <meta name="twitter:description" content="Start your day with inspiring devotionals, sermons, and messages from Pastor Rick Warren. Watch, listen, and read daily devotionals." />
+    <meta name="twitter:image" content="/images/daily-hope-preview.jpg" />
+    <meta name="twitter:creator" content="@PastorRick" />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Merriweather:wght@700;900&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+      /* iOS safe area support */
+      :root {
+        --sat: env(safe-area-inset-top);
+        --sab: env(safe-area-inset-bottom);
+      }
+      
+      body {
+        overscroll-behavior-y: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      .safe-area-inset-top {
+        padding-top: env(safe-area-inset-top);
+      }
+      
+      .safe-area-inset-bottom {
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

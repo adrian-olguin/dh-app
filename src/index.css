@@ -1,0 +1,165 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Vibrant Daily Hope Brand Colors */
+    --background: 220 30% 97%;
+    --foreground: 220 20% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 15%;
+
+    /* Primary: Dark Royal Blue - Trust and Stability */
+    --primary: 220 80% 40%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 220 80% 50%;
+
+    /* Secondary: Warm Gold - Divine Light */
+    --secondary: 38 92% 50%;
+    --secondary-foreground: 220 20% 15%;
+
+    --muted: 220 25% 94%;
+    --muted-foreground: 220 15% 50%;
+
+    /* Accent: Sky Blue - Hope and Renewal */
+    --accent: 205 85% 55%;
+    --accent-foreground: 0 0% 100%;
+    --accent-glow: 205 85% 65%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 20% 88%;
+    --input: 220 20% 88%;
+    --ring: 220 80% 40%;
+
+    --radius: 1rem;
+    
+    /* Vibrant Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(220 80% 40%), hsl(220 80% 50%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 50%), hsl(45 93% 47%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 80% 40%), hsl(205 85% 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(205 85% 55%), hsl(205 85% 65%));
+    --gradient-card: linear-gradient(135deg, hsl(0 0% 100%), hsl(220 30% 99%));
+    
+    /* Enhanced Shadows */
+    --shadow-soft: 0 4px 24px -4px hsl(220 70% 40% / 0.12);
+    --shadow-elevated: 0 12px 40px -8px hsl(220 70% 40% / 0.18);
+    --shadow-glow: 0 0 40px hsl(220 80% 50% / 0.3);
+    --shadow-accent: 0 8px 32px -8px hsl(205 85% 55% / 0.25);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 220 80% 40%;
+  }
+
+  .dark {
+    /* Vibrant Dark Mode */
+    --background: 220 35% 8%;
+    --foreground: 220 20% 95%;
+
+    --card: 220 30% 12%;
+    --card-foreground: 220 20% 95%;
+
+    --popover: 220 30% 12%;
+    --popover-foreground: 220 20% 95%;
+
+    --primary: 220 80% 50%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 220 80% 60%;
+
+    --secondary: 38 92% 55%;
+    --secondary-foreground: 220 20% 10%;
+
+    --muted: 220 25% 16%;
+    --muted-foreground: 220 15% 65%;
+
+    --accent: 205 85% 60%;
+    --accent-foreground: 0 0% 100%;
+    --accent-glow: 205 85% 70%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 25% 18%;
+    --input: 220 25% 18%;
+    --ring: 220 80% 50%;
+    
+    --gradient-primary: linear-gradient(135deg, hsl(220 80% 50%), hsl(220 80% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(38 92% 55%), hsl(45 93% 52%));
+    --gradient-hero: linear-gradient(135deg, hsl(220 80% 50%), hsl(205 85% 60%));
+    --gradient-accent: linear-gradient(135deg, hsl(205 85% 60%), hsl(205 85% 70%));
+    --gradient-card: linear-gradient(135deg, hsl(220 30% 12%), hsl(220 30% 14%));
+    
+    --shadow-soft: 0 4px 24px -4px hsl(220 70% 25% / 0.5);
+    --shadow-elevated: 0 12px 40px -8px hsl(220 70% 25% / 0.6);
+    --shadow-glow: 0 0 40px hsl(220 80% 50% / 0.4);
+    --shadow-accent: 0 8px 32px -8px hsl(205 85% 60% / 0.35);
+    
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 220 80% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 220 80% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border transition-colors duration-300;
+  }
+
+  body {
+    @apply bg-background text-foreground transition-colors duration-300;
+  }
+  
+  /* Mobile Safari optimizations */
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+  
+  /* Touch-friendly scrolling */
+  * {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Prevent zoom on input focus (iOS) */
+  input, select, textarea {
+    font-size: 16px;
+  }
+  
+  /* Safe area support for notched devices */
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  
+  .safe-area-inset-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-area-inset-right {
+    padding-right: env(safe-area-inset-right);
+  }
+}
