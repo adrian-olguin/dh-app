@@ -7,8 +7,8 @@ import { Heart, CreditCard, Calendar, Users, Globe, BookOpen, TrendingUp } from 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { DonationHistory } from "@/components/DonationHistory";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { buildDonationUrl } from "@/lib/donations";
 
 export const GiveTab = () => {
   const { t } = useTranslation();
@@ -50,38 +50,31 @@ export const GiveTab = () => {
     },
   ];
 
-  const handleDonation = async () => {
-    const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
-    
-    if (!amount || amount <= 0) {
-      toast.error(t('give.error.invalidAmount'));
-      return;
-    }
+  const handleDonation = () => {
+  const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
 
-    setIsProcessing(true);
+  if (!amount || amount <= 0) {
+    toast.error(t("give.error.invalidAmount"));
+    return;
+  }
 
-    try {
-      const { data, error } = await supabase.functions.invoke('create-donation-checkout', {
-        body: {
-          amount,
-          type: donationType,
-        },
-      });
+  setIsProcessing(true);
 
-      if (error) throw error;
+  try {
+    // Map local state ("once" | "monthly") to Shopify frequency type
+    const frequency = donationType === "monthly" ? "monthly" : "oneTime";
 
-      if (data?.url) {
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error) {
-      console.error('Error creating donation:', error);
-      toast.error(t('give.error.processing'));
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+    const url = buildDonationUrl(frequency, amount);
+
+    // Redirect to Shopify checkout. Use _blank if you prefer a new tab.
+    window.location.href = url;
+  } catch (error) {
+    console.error("Error building donation URL:", error);
+    toast.error(t("give.error.processing"));
+    setIsProcessing(false);
+  }
+};
+
 
   return (
     <div className="pb-20 pt-3 px-3 max-w-md mx-auto">
