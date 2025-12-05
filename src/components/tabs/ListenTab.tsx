@@ -77,13 +77,17 @@ export const ListenTab = () => {
     refetchOnWindowFocus: false,
   });
 
-  // Set the first episode as current when episodes are loaded
+  // Always set the first episode as current whenever the list changes
   useEffect(() => {
-    if (episodes.length > 0 && !currentBroadcast) {
+    if (episodes.length > 0) {
       setCurrentBroadcast(episodes[0]);
       setSelectedEpisode(episodes[0]);
+    } else {
+      setCurrentBroadcast(null);
+      setSelectedEpisode(null);
     }
-  }, [episodes, currentBroadcast]);
+  }, [episodes]);
+
 
   // Load playback positions when episodes are loaded
   useEffect(() => {

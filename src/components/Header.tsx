@@ -113,15 +113,6 @@ export const Header = ({
                   <DropdownMenuItem onClick={() => changeLanguage("es")}>
                     Español
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage("pt")}>
-                    Português
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage("fr")}>
-                    Français
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage("de")}>
-                    Deutsch
-                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
 
