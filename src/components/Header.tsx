@@ -19,115 +19,156 @@ interface HeaderProps {
   onChristmasToggle?: () => void;
 }
 
-export const Header = ({ onSearchClick, christmasMode = false, onChristmasToggle }: HeaderProps) => {
+export const Header = ({
+  onSearchClick,
+  christmasMode = false,
+  onChristmasToggle,
+}: HeaderProps) => {
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { i18n } = useTranslation();
   const [authOpen, setAuthOpen] = useState(false);
-  
+
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
   };
-  
+
   return (
     <>
       <header
-        className="sticky z-40 w-full backdrop-blur-lg bg-background/80 supports-[backdrop-filter]:bg-background/60 shadow-md shadow-primary/5 border-b border-border transition-colors duration-300"
-        style={{ top: "env(safe-area-inset-top, 0px)" }}
+        // Stick to the very top; header background will fill the notch area.
+        className="sticky top-0 z-40 w-full bg-background shadow-md shadow-primary/5 border-b border-border transition-colors duration-300"
       >
-        <div className="px-4 py-3 safe-area-inset-top">
+        <div
+          className="px-4 py-3"
+          // Push header content down by safe-area, but keep background behind notch.
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
           <div className="flex items-center justify-between">
+            {/* Left Spacer */}
             <div className="flex-1" />
+
+            {/* Logo */}
             <div className="relative">
               {christmasMode && (
                 <>
                   <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-red-500 animate-blink" />
-                  <div className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-green-500 animate-blink" style={{ animationDelay: "0.5s" }} />
-                  <div className="absolute -top-2 right-8 w-3 h-3 rounded-full bg-yellow-500 animate-blink" style={{ animationDelay: "1s" }} />
-                  <div className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-blue-500 animate-blink" style={{ animationDelay: "1.5s" }} />
-                  <div className="absolute top-10 -left-2 w-3 h-3 rounded-full bg-yellow-500 animate-blink" style={{ animationDelay: "0.75s" }} />
-                  <div className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-red-500 animate-blink" style={{ animationDelay: "1.25s" }} />
+                  <div
+                    className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-green-500 animate-blink"
+                    style={{ animationDelay: "0.5s" }}
+                  />
+                  <div
+                    className="absolute -top-2 right-8 w-3 h-3 rounded-full bg-yellow-500 animate-blink"
+                    style={{ animationDelay: "1s" }}
+                  />
+                  <div
+                    className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-blue-500 animate-blink"
+                    style={{ animationDelay: "1.5s" }}
+                  />
+                  <div
+                    className="absolute top-10 -left-2 w-3 h-3 rounded-full bg-yellow-500 animate-blink"
+                    style={{ animationDelay: "0.75s" }}
+                  />
+                  <div
+                    className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-red-500 animate-blink"
+                    style={{ animationDelay: "1.25s" }}
+                  />
                 </>
               )}
+
               <img
                 src="/images/daily-hope-logo.png"
                 alt="Daily Hope"
                 className="h-10 w-auto max-w-[200px] object-contain drop-shadow-lg dark:brightness-0 dark:invert transition-all duration-300"
               />
             </div>
-            <div className="flex-1 flex justify-end gap-1">
-              <Button 
-                variant="ghost" 
+
+            {/* Right Icon Row */}
+            <div className="flex-1 flex justify-end gap-0.5">
+              {/* Search */}
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={onSearchClick}
-                className="active:bg-primary/20 h-11 w-11 text-primary touch-manipulation"
+                className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
               >
-                <Search className="w-6 h-6" />
+                <Search className="w-5 h-5" />
               </Button>
+
+              {/* Language Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     size="icon"
-                    className="active:bg-primary/20 h-11 w-11 text-primary touch-manipulation"
+                    className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
                   >
-                    <Languages className="w-6 h-6" />
+                    <Languages className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => changeLanguage('en')}>
+                  <DropdownMenuItem onClick={() => changeLanguage("en")}>
                     English
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage('es')}>
+                  <DropdownMenuItem onClick={() => changeLanguage("es")}>
                     Español
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage('pt')}>
+                  <DropdownMenuItem onClick={() => changeLanguage("pt")}>
                     Português
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage('fr')}>
+                  <DropdownMenuItem onClick={() => changeLanguage("fr")}>
                     Français
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => changeLanguage('de')}>
+                  <DropdownMenuItem onClick={() => changeLanguage("de")}>
                     Deutsch
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              <Button 
-                variant="ghost" 
+
+              {/* Light/Dark Mode */}
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="active:bg-primary/20 h-11 w-11 text-primary touch-manipulation"
+                className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
               >
                 {theme === "dark" ? (
-                  <Sun className="w-6 h-6" />
+                  <Sun className="w-5 h-5" />
                 ) : (
-                  <Moon className="w-6 h-6" />
+                  <Moon className="w-5 h-5" />
                 )}
               </Button>
-              <Button 
-                variant="ghost" 
+
+              {/* Christmas Mode */}
+              <Button
+                variant="ghost"
                 size="icon"
                 onClick={onChristmasToggle}
-                className={`active:bg-primary/20 h-11 w-11 ${christmasMode ? 'text-red-500' : 'text-primary'} touch-manipulation`}
+                className={`active:bg-primary/20 h-10 w-10 ${
+                  christmasMode ? "text-red-500" : "text-primary"
+                } touch-manipulation`}
               >
-                <Snowflake className="w-6 h-6" />
+                <Snowflake className="w-5 h-5" />
               </Button>
+
+              {/* User / Login */}
               {user ? (
                 <UserMenu />
               ) : (
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   size="icon"
                   onClick={() => setAuthOpen(true)}
-                  className="active:bg-primary/20 h-11 w-11 text-primary touch-manipulation"
+                  className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
                 >
-                  <LogIn className="w-6 h-6" />
+                  <LogIn className="w-5 h-5" />
                 </Button>
               )}
             </div>
           </div>
         </div>
       </header>
+
       <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </>
   );
