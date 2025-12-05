@@ -185,9 +185,10 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
           </div>
         </div>
 
-        {/* Controls */}
+                {/* Controls */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
+          {/* Volume + slider */}
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
@@ -211,45 +212,44 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
             </div>
           </div>
 
-          <div className="flex items-center gap-1">
+          {/* Prev / Play / Next / Speed – all grouped tightly */}
+          <div className="flex items-center gap-0.5">
             <Button
               variant="ghost"
               size="icon"
               onClick={() => skip(-15)}
-              className="h-10 w-10"
+              className="h-9 w-9"
             >
-              <SkipBack className="h-5 w-5" />
+              <SkipBack className="h-4 w-4" />
             </Button>
-            
+
             <Button
               onClick={togglePlay}
               size="lg"
               disabled={isLoading}
-              className="h-12 w-12 rounded-full disabled:opacity-50"
+              className="h-11 w-11 rounded-full disabled:opacity-50"
             >
               {isPlaying ? (
-                <Pause className="h-6 w-6 fill-current" />
+                <Pause className="h-5 w-5 fill-current" />
               ) : (
-                <Play className="h-6 w-6 fill-current ml-0.5" />
+                <Play className="h-5 w-5 fill-current ml-0.5" />
               )}
             </Button>
-            
+
             <Button
               variant="ghost"
               size="icon"
               onClick={() => skip(15)}
-              className="h-10 w-10"
+              className="h-9 w-9"
             >
-              <SkipForward className="h-5 w-5" />
+              <SkipForward className="h-4 w-4" />
             </Button>
-          </div>
 
-          <div className="flex items-center gap-1">
             <Button
               variant="ghost"
               size="sm"
               onClick={cyclePlaybackRate}
-              className="h-8 px-2 text-xs font-semibold min-w-[3rem]"
+              className="h-8 px-2 text-xs font-semibold min-w-[2.5rem]"
             >
               {playbackRate}x
             </Button>
