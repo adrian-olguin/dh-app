@@ -31,7 +31,10 @@ export const Header = ({ onSearchClick, christmasMode = false, onChristmasToggle
   
   return (
     <>
-      <header className="sticky top-0 z-40 w-full backdrop-blur-lg bg-background/95 shadow-elevated border-b border-border transition-colors duration-300">
+      <header
+        className="sticky z-40 w-full backdrop-blur-lg bg-background/80 supports-[backdrop-filter]:bg-background/60 shadow-md shadow-primary/5 border-b border-border transition-colors duration-300"
+        style={{ top: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="px-4 py-3 safe-area-inset-top">
           <div className="flex items-center justify-between">
             <div className="flex-1" />
@@ -46,10 +49,10 @@ export const Header = ({ onSearchClick, christmasMode = false, onChristmasToggle
                   <div className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-red-500 animate-blink" style={{ animationDelay: "1.25s" }} />
                 </>
               )}
-              <img 
-                src="/images/daily-hope-logo.png" 
-                alt="Daily Hope" 
-                className="h-12 w-auto drop-shadow-lg dark:brightness-0 dark:invert transition-all duration-300"
+              <img
+                src="/images/daily-hope-logo.png"
+                alt="Daily Hope"
+                className="h-10 w-auto max-w-[200px] object-contain drop-shadow-lg dark:brightness-0 dark:invert transition-all duration-300"
               />
             </div>
             <div className="flex-1 flex justify-end gap-1">
