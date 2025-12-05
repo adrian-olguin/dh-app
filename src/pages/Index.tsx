@@ -91,7 +91,13 @@ const Index = () => {
   };
 
   return (
-  <div className="min-h-screen bg-muted flex justify-center transition-colors duration-300">
+  <div
+    className="min-h-screen bg-muted flex justify-center transition-colors duration-300"
+    style={{
+      // Push content down by the iOS safe area + a little extra spacing.
+      paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)",
+    }}
+  >
     <div className="w-full max-w-md mx-auto min-h-screen bg-background text-foreground flex flex-col shadow-2xl relative transition-colors duration-300">
       {christmasMode && <Snowfall />}
       <Header
@@ -109,6 +115,7 @@ const Index = () => {
     </div>
   </div>
 );
+
 };
 
 export default Index;
