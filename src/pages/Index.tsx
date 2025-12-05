@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Header } from "@/components/Header";
 import { TabNavigation } from "@/components/TabNavigation";
 import { WatchTab } from "@/components/tabs/WatchTab";
@@ -13,43 +13,43 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("watch");
   const [searchOpen, setSearchOpen] = useState(false);
   const [christmasMode, setChristmasMode] = useState(false);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  // const touchStartX = useRef(0);
+  // const touchEndX = useRef(0);
 
-  const tabs = ["watch", "listen", "read", "give"];
+  // const tabs = ["watch", "listen", "read", "give"];
 
-  const handleSwipe = () => {
-    const swipeThreshold = 50; // Minimum distance for a swipe
-    const diff = touchStartX.current - touchEndX.current;
+  // const handleSwipe = () => {
+  //   const swipeThreshold = 50; // Minimum distance for a swipe
+  //   const diff = touchStartX.current - touchEndX.current;
 
-    if (Math.abs(diff) < swipeThreshold) return;
+  //   if (Math.abs(diff) < swipeThreshold) return;
 
-    const currentIndex = tabs.indexOf(activeTab);
+  //   const currentIndex = tabs.indexOf(activeTab);
 
-    if (diff > 0) {
-      // Swiped left - go to next tab
-      if (currentIndex < tabs.length - 1) {
-        setActiveTab(tabs[currentIndex + 1]);
-      }
-    } else {
-      // Swiped right - go to previous tab
-      if (currentIndex > 0) {
-        setActiveTab(tabs[currentIndex - 1]);
-      }
-    }
-  };
+  //   if (diff > 0) {
+  //     // Swiped left - go to next tab
+  //     if (currentIndex < tabs.length - 1) {
+  //       setActiveTab(tabs[currentIndex + 1]);
+  //     }
+  //   } else {
+  //     // Swiped right - go to previous tab
+  //     if (currentIndex > 0) {
+  //       setActiveTab(tabs[currentIndex - 1]);
+  //     }
+  //   }
+  // };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
+  // const handleTouchStart = (e: React.TouchEvent) => {
+  //   touchStartX.current = e.touches[0].clientX;
+  // };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
+  // const handleTouchMove = (e: React.TouchEvent) => {
+  //   touchEndX.current = e.touches[0].clientX;
+  // };
 
-  const handleTouchEnd = () => {
-    handleSwipe();
-  };
+  // const handleTouchEnd = () => {
+  //   handleSwipe();
+  // };
 
   const renderTab = () => {
     switch (activeTab) {
@@ -99,12 +99,8 @@ const Index = () => {
           christmasMode={christmasMode}
           onChristmasToggle={() => setChristmasMode(!christmasMode)}
         />
-        <main 
-          className="flex-1 pb-24 overflow-y-auto transition-all duration-300"
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
-        >
+        <main
+  className="flex-1 pb-24 overflow-y-auto transition-all duration-300">
           {renderTab()}
         </main>
         <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
