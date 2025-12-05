@@ -91,23 +91,24 @@ const Index = () => {
   };
 
   return (
-    <div className="min-h-screen bg-muted flex items-center justify-center transition-colors duration-300">
-      <div className="w-full max-w-md mx-auto min-h-screen bg-background flex flex-col shadow-2xl relative transition-colors duration-300">
-        {christmasMode && <Snowfall />}
-        <Header 
-          onSearchClick={() => setSearchOpen(true)}
-          christmasMode={christmasMode}
-          onChristmasToggle={() => setChristmasMode(!christmasMode)}
-        />
-        <main
-  className="flex-1 pb-24 overflow-y-auto transition-all duration-300">
-          {renderTab()}
-        </main>
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-        <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
-      </div>
+  <div className="min-h-screen bg-muted flex justify-center transition-colors duration-300">
+    <div className="w-full max-w-md mx-auto min-h-screen bg-background text-foreground flex flex-col shadow-2xl relative transition-colors duration-300">
+      {christmasMode && <Snowfall />}
+      <Header
+        onSearchClick={() => setSearchOpen(true)}
+        christmasMode={christmasMode}
+        onChristmasToggle={() => setChristmasMode(!christmasMode)}
+      />
+      <main
+        className="flex-1 pb-24 overflow-y-auto transition-all duration-300"
+      >
+        {renderTab()}
+      </main>
+      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
     </div>
-  );
+  </div>
+);
 };
 
 export default Index;
