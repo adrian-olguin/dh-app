@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { buildDonationUrl } from "@/lib/donations";
 
 export const GiveTab = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [selectedAmount, setSelectedAmount] = useState<number | null>(null);
   const [customAmount, setCustomAmount] = useState("");
   const [donationType, setDonationType] = useState<"once" | "monthly">("once");
@@ -58,15 +58,19 @@ export const GiveTab = () => {
     return;
   }
 
-  setIsProcessing(true);
+    setIsProcessing(true);
 
   try {
-    // Map local state ("once" | "monthly") to Shopify frequency type
     const frequency = donationType === "monthly" ? "monthly" : "oneTime";
 
-    const url = buildDonationUrl(frequency, amount);
+    // If the UI is in Spanish, use the es-US locale for checkout
+    const locale = i18n.language === "es" ? "es-us" : undefined;
 
-    // Redirect to Shopify checkout. Use _blank if you prefer a new tab.
+    const url = buildDonationUrl(frequency, amount, locale);
+
+    // Reset state before leaving the app
+    setIsProcessing(false);
+
     window.location.href = url;
   } catch (error) {
     console.error("Error building donation URL:", error);
@@ -74,6 +78,7 @@ export const GiveTab = () => {
     setIsProcessing(false);
   }
 };
+
 
 
   return (
@@ -232,7 +237,7 @@ export const GiveTab = () => {
                         setCustomAmount("");
                       }}
                     >
-                      ${amount}/mo
+                      ${amount}
                     </Button>
                   ))}
                 </div>
