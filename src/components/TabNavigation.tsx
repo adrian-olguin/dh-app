@@ -11,9 +11,9 @@ export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) =>
   const { t } = useTranslation();
   
   const tabs = [
-    { id: "watch", label: t('tabs.watch'), icon: Play },
-    { id: "listen", label: t('tabs.listen'), icon: Headphones },
     { id: "read", label: t('tabs.read'), icon: BookOpen },
+    { id: "listen", label: t('tabs.listen'), icon: Headphones },
+    { id: "watch", label: t('tabs.watch'), icon: Play },
     { id: "give", label: t('tabs.give'), icon: Heart },
   ];
 

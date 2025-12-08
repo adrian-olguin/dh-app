@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Rewind, FastForward } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -139,7 +139,7 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
   };
 
   const cyclePlaybackRate = () => {
-    const rates = [1, 1.25, 1.5, 1.75, 2];
+    const rates = [1, 1.5, 2];
     const currentIndex = rates.indexOf(playbackRate);
     const nextIndex = (currentIndex + 1) % rates.length;
     setPlaybackRate(rates[nextIndex]);
@@ -220,7 +220,7 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
               onClick={() => skip(-15)}
               className="h-9 w-9"
             >
-              <SkipBack className="h-4 w-4" />
+              <Rewind className="h-4 w-4" />
             </Button>
 
             <Button
@@ -242,7 +242,7 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
               onClick={() => skip(15)}
               className="h-9 w-9"
             >
-              <SkipForward className="h-4 w-4" />
+              <FastForward className="h-4 w-4" />
             </Button>
 
             <Button

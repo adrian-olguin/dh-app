@@ -269,7 +269,7 @@ export const ListenTab = () => {
           <Play className="w-5 h-5 text-primary" />
           {t('listen.recentEpisodes')}
         </h2>
-        <Popover>
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -293,7 +293,7 @@ export const ListenTab = () => {
               className="pointer-events-auto"
             />
           </PopoverContent>
-        </Popover>
+        </Popover> */}
       </div>
       <div className="space-y-3">
         {episodes.slice(1, 7).map((episode, index) => {

@@ -205,7 +205,7 @@ export const WatchTab = () => {
           <Play className="w-5 h-5 text-primary" />
           {t('watch.recentMessages')}
         </h2>
-        <Popover>
+        {/* <Popover>
           <PopoverTrigger asChild>
             <Button
               variant="outline"
@@ -229,7 +229,7 @@ export const WatchTab = () => {
               className="pointer-events-auto"
             />
           </PopoverContent>
-        </Popover>
+        </Popover> */}
       </div>
       <div className="space-y-3">
         {recentVideos.map((video, index) => (

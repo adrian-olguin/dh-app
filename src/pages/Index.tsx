@@ -10,7 +10,7 @@ import { Snowfall } from "@/components/Snowfall";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState("watch");
+  const [activeTab, setActiveTab] = useState("read");
   const [searchOpen, setSearchOpen] = useState(false);
   const [christmasMode, setChristmasMode] = useState(false);
   // const touchStartX = useRef(0);
