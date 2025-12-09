@@ -108,6 +108,12 @@ export const ReadTab = () => {
     });
   };
 
+  const handleArticleClick = (article: Article) => {
+    setSelectedArticle(article);
+    // Scroll to top when opening a devotional
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -186,7 +192,7 @@ export const ReadTab = () => {
           {articles[0].image_url && (
             <img src={articles[0].image_url} alt={articles[0].title} className="w-full h-48 object-cover rounded-lg mb-6" />
           )}
-          <Button onClick={() => setSelectedArticle(articles[0])} className="w-full">{t('read.readToday')}</Button>
+          <Button onClick={() => handleArticleClick(articles[0])} className="w-full">{t('read.readToday')}</Button>
         </div>
       </Card>
 
@@ -197,7 +203,7 @@ export const ReadTab = () => {
 
       <div className="space-y-3">
         {articles.slice(1, 61).map((article) => (
-          <Card key={article.id} onClick={() => setSelectedArticle(article)} className="cursor-pointer hover:shadow-soft transition-all">
+          <Card key={article.id} onClick={() => handleArticleClick(article)} className="cursor-pointer hover:shadow-soft transition-all">
             <CardContent className="flex items-center gap-4 p-0">
               {article.image_url && (
                 <img src={article.image_url} alt={article.title} className="w-32 h-24 object-cover rounded-none" />
