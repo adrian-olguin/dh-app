@@ -312,7 +312,7 @@ export const ListenTab = () => {
               )}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="flex items-center gap-4 p-0 relative">
+              <CardContent className="flex items-stretch gap-4 p-0 relative">
                 {/* Progress bar at bottom */}
                 {progress > 0 && !isCompleted && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
@@ -324,7 +324,7 @@ export const ListenTab = () => {
                 )}
 
                 {/* Thumbnail Image */}
-                <div className="relative w-28 h-24 flex-shrink-0">
+                <div className="relative w-28 flex-shrink-0 rounded-l-lg overflow-hidden">
                   <img
                     src={episode.thumbnail}
                     alt={episode.title}

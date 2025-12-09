@@ -217,9 +217,11 @@ export const ReadTab = () => {
       <div className="space-y-3">
         {articles.slice(1, 61).map((article) => (
           <Card key={article.id} onClick={() => handleArticleClick(article)} className="cursor-pointer hover:shadow-soft transition-all">
-            <CardContent className="flex items-center gap-4 p-0">
+            <CardContent className="flex items-stretch gap-4 p-0">
               {article.image_url && (
-                <img src={article.image_url} alt={article.title} className="w-32 h-24 object-cover rounded-none" />
+                <div className="relative w-28 flex-shrink-0 rounded-l-lg overflow-hidden">
+                  <img src={article.image_url} alt={article.title} className="w-full h-full object-cover" />
+                </div>
               )}
               <div className="flex-1 py-4 pr-4">
                 <p className="font-semibold text-base line-clamp-2 mb-1">{article.title}</p>

@@ -251,9 +251,9 @@ export const WatchTab = () => {
             className="hover:shadow-soft transition-all cursor-pointer border-2 border-transparent hover:border-accent/30 animate-slide-up overflow-hidden"
             style={{ animationDelay: `${index * 0.1}s` }}
           >
-            <CardContent className="flex items-center gap-4 p-0">
+            <CardContent className="flex items-stretch gap-4 p-0">
               {/* Thumbnail Image */}
-              <div className="relative w-28 h-24 flex-shrink-0">
+              <div className="relative w-28 flex-shrink-0 rounded-l-lg overflow-hidden">
                 <img
                   src={video.thumbnail}
                   alt={video.title}
