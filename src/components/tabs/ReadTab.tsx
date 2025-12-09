@@ -186,9 +186,22 @@ export const ReadTab = () => {
     <div className="pb-4 pt-4 px-4 max-w-md mx-auto">
       <Card className="mb-6 shadow-soft overflow-hidden">
         <div className="bg-gradient-to-br from-primary/10 via-accent/10 to-secondary/5 p-6">
-          <h2 className="text-lg font-semibold mb-2">{articles[0].title}</h2>
-          <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{articles[0].excerpt}</p>
-          <p className="text-xs text-muted-foreground mb-4">{articles[0].date}</p>
+          {/* Header Info */}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2 text-muted-foreground text-xs">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>{articles[0].date}</span>
+            </div>
+            <div className="flex items-center gap-2 text-primary text-xs font-medium">
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Today's Devotional</span>
+            </div>
+          </div>
+          
+          {/* Title Section */}
+          <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">{articles[0].title}</h1>
+          <p className="text-sm text-muted-foreground mb-6">{t('read.pastor')}</p>
+          
           {articles[0].image_url && (
             <img src={articles[0].image_url} alt={articles[0].title} className="w-full h-48 object-cover rounded-lg mb-6" />
           )}

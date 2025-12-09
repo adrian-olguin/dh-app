@@ -244,18 +244,16 @@ export const ListenTab = () => {
           </div>
 
           {/* Title Section */}
-          <div className="mb-6">
-            <h2 className="text-lg font-semibold text-foreground mb-1 leading-tight">
-              {currentBroadcast.title}
-            </h2>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>{t("listen.pastor")}</span>
-              {currentProgress > 0 && !isCurrentCompleted && (
-                <span className="text-primary font-medium">
-                  • Continue playing
-                </span>
-              )}
-            </div>
+          <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">
+            {currentBroadcast.title}
+          </h1>
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+            <span>{t("listen.pastor")}</span>
+            {currentProgress > 0 && !isCurrentCompleted && (
+              <span className="text-primary font-medium">
+                • Continue playing
+              </span>
+            )}
           </div>
 
           {/* Audio Player – mounted but paused until user presses Play OR taps a tile */}
