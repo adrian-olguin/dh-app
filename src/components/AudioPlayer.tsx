@@ -50,20 +50,23 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
 
     const handleLoadedMetadata = async () => {
       setDuration(audio.duration);
-      
+
       // Load saved position only once when metadata is loaded
       if (!hasLoadedPosition.current) {
         hasLoadedPosition.current = true;
         const savedPosition = await loadPosition();
-        
+
         if (savedPosition > 0) {
           audio.currentTime = savedPosition;
           setCurrentTime(savedPosition);
           toast.success("Resuming from where you left off");
         }
+
         setIsLoading(false);
+
       }
     };
+
 
     const handleEnded = () => {
       setIsPlaying(false);

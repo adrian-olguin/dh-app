@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import { VideoPlayer } from "@/components/VideoPlayer";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import natureFeatured from "@/assets/nature-featured.jpg";
+import tvThumbnail from "@/assets/TV-thumbnail.jpg"
 
 export const WatchTab = () => {
   const { t, i18n } = useTranslation();
@@ -37,16 +38,16 @@ export const WatchTab = () => {
     }
   };
 
-  const videoDate = new Date(2025, 10, 9); // November 9, 2025
+  const videoDate = new Date(2025, 12, 8); // December 8, 2025
   
   const featuredVideo = {
     id: "video-2025-11-09",
     date: format(videoDate, "MMMM d, yyyy", { locale: getLocale() }),
     title: t('watch.featuredTitle'),
     description: t('watch.featuredDescription'),
-    thumbnail: natureFeatured,
+    thumbnail: tvThumbnail,
     duration: "28:45",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
   };
 
   const recentVideos = [
@@ -54,21 +55,21 @@ export const WatchTab = () => {
       id: 1, 
       title: t('watch.videos.powerOfFaith'), 
       duration: "24:30",
-      thumbnail: "https://images.unsplash.com/photo-1528605105345-5344ea20e269?w=400&q=80",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+      thumbnail: tvThumbnail,
+      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
     },
     { 
       id: 2, 
       title: t('watch.videos.livingWithPurpose'), 
       duration: "31:15",
-      thumbnail: "https://images.unsplash.com/photo-1504052434569-70ad5836ab65?w=400&q=80",
+      thumbnail: tvThumbnail,
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
     },
     { 
       id: 3, 
       title: t('watch.videos.overcomingChallenges'), 
       duration: "26:50",
-      thumbnail: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=400&q=80",
+      thumbnail: tvThumbnail,
       videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
     },
     { 
@@ -107,14 +108,25 @@ export const WatchTab = () => {
   };
 
   const handlePlayVideo = (video: { id: string | number; title: string; thumbnail: string; videoUrl: string }) => {
+    const url = video.videoUrl;
+
+    if (url.includes("youtube.com") || url.includes("youtu.be")) {
+      // Web: open in new tab
+      window.open(url, "_blank");
+      // If you also run this in a native shell, you’d use Linking.openURL(url)
+      return;
+    }
+
+    // Fallback: use internal HTML5 video player for direct .mp4 links
     setCurrentVideo({
       id: String(video.id),
       title: video.title,
-      videoUrl: video.videoUrl,
+      videoUrl: url,
       thumbnail: video.thumbnail,
     });
     setIsPlayerOpen(true);
   };
+
 
   return (
     <div className="pb-4 pt-4 px-4 max-w-md mx-auto">
@@ -153,7 +165,7 @@ export const WatchTab = () => {
               <Play className="w-10 h-10 fill-primary text-primary ml-1" />
             </Button>
             
-            {/* Download Button - Bottom Left */}
+            {/* Download Button - Bottom Left
             <div className="absolute bottom-4 left-4">
               <TooltipProvider>
                 <Tooltip>
@@ -180,7 +192,7 @@ export const WatchTab = () => {
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            </div>
+            </div> */}
             
             {/* Duration - Bottom Right */}
             <span className="absolute bottom-4 right-4 bg-black/80 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-full font-medium">
@@ -264,7 +276,7 @@ export const WatchTab = () => {
                 <p className="text-xs text-muted-foreground">{t('watch.pastor')}</p>
               </div>
 
-              {/* Download Button */}
+              {/* Download Button
               <div className="pr-4">
                 <TooltipProvider>
                   <Tooltip>
@@ -296,7 +308,7 @@ export const WatchTab = () => {
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              </div>
+              </div> */}
             </CardContent>
           </Card>
         ))}
