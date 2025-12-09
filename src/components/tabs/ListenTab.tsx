@@ -290,7 +290,7 @@ export const ListenTab = () => {
       </div>
 
       <div className="space-y-3">
-        {episodes.slice(1, 7).map((episode, index) => {
+        {episodes.slice(1, 61).map((episode, index) => {
           const position = playbackPositions.get(episode.id);
           const progress =
             position && position.duration > 0

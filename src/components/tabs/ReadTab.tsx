@@ -196,7 +196,7 @@ export const ReadTab = () => {
       </h2>
 
       <div className="space-y-3">
-        {articles.slice(1, 7).map((article) => (
+        {articles.slice(1, 61).map((article) => (
           <Card key={article.id} onClick={() => setSelectedArticle(article)} className="cursor-pointer hover:shadow-soft transition-all">
             <CardContent className="flex items-center gap-4 p-0">
               {article.image_url && (

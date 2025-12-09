@@ -1,3 +1,11 @@
+// Deno global type declaration for Supabase Edge Functions
+declare const Deno: {
+  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
+  env: {
+    get: (key: string) => string | undefined;
+  };
+};
+
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -69,7 +77,7 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
   const items: any[] = [];
   
   let itemStart = 0;
-  const maxItems = 20;
+  const maxItems = 60;
   
   while (items.length < maxItems) {
     itemStart = xmlText.indexOf('<item>', itemStart);
@@ -146,7 +154,7 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
       });
     }
     
-    itemStart = itemEnd + 7;
+    itemStart = itemEnd + 60;
   }
   
   console.log(`Parsed ${items.length} ${type} items from RSS feed`);
