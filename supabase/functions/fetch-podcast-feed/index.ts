@@ -1,3 +1,8 @@
+/// <reference path="../deno.d.ts" />
+
+// Export empty object to make this a proper ES module
+export {};
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -102,8 +107,7 @@ Deno.serve(async (req) => {
     console.log("Cache miss — fetching RSS feed…");
 
     // Your feed URL
-    const feedUrl =
-      "const feedUrl = 'https://www.pastorrick.com/rss/en/broadcast/feed';";
+    const feedUrl = 'https://www.pastorrick.com/rss/en/broadcast/feed';
 
     const response = await fetch(feedUrl);
     if (!response.ok) {
@@ -182,7 +186,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         episodes,
-        feedTitle: cache.feedTitle,
+        feedTitle: cache?.feedTitle || "Pastor Rick's Daily Hope",
         cached: false,
       }),
       {

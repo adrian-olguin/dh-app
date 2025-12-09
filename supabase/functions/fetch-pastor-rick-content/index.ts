@@ -1,10 +1,7 @@
-// Deno global type declaration for Supabase Edge Functions
-declare const Deno: {
-  serve: (handler: (req: Request) => Response | Promise<Response>) => void;
-  env: {
-    get: (key: string) => string | undefined;
-  };
-};
+/// <reference path="../deno.d.ts" />
+
+// Export empty object to make this a proper ES module
+export {};
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

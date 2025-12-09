@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Header } from "@/components/Header";
 import { TabNavigation } from "@/components/TabNavigation";
 import { WatchTab } from "@/components/tabs/WatchTab";
@@ -13,6 +13,11 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("read");
   const [searchOpen, setSearchOpen] = useState(false);
   const [christmasMode, setChristmasMode] = useState(false);
+
+  // Scroll to top when tab changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab]);
 
 return (
   <ErrorBoundary
