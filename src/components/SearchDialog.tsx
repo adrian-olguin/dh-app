@@ -4,8 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { BookmarkButton } from "@/components/BookmarkButton";
-import { Search, Video, Headphones, BookOpen, Loader2, ArrowUpRight } from "lucide-react";
+import { Search, Video, Headphones, BookOpen, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -191,7 +190,6 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
 
   const renderResultCard = (item: SearchResult) => {
     const Icon = item.type === "video" ? Video : item.type === "audio" ? Headphones : BookOpen;
-    const contentType = item.type === "video" ? "message" : item.type;
 
     return (
       <Card
@@ -206,8 +204,8 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
             </div>
             <div className="flex-1 space-y-2">
               <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="font-semibold text-foreground leading-snug">{item.title}</h3>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-foreground leading-snug line-clamp-2">{item.title}</h3>
                   <div className="text-sm text-muted-foreground flex flex-wrap gap-2 items-center">
                     <span className="capitalize">{item.type}</span>
                     {item.date && (
@@ -230,22 +228,24 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
                     )}
                   </div>
                 </div>
-                <BookmarkButton
-                  contentType={contentType}
-                  contentId={item.id.toString()}
-                  title={item.title}
-                />
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  className="shrink-0"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSelect(item);
+                  }}
+                >
+                  Open
+                </Button>
               </div>
               {"description" in item && item.description && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{item.description}</p>
               )}
               {"excerpt" in item && item.excerpt && (
-                <p className="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
+                <p className="text-sm text-muted-foreground line-clamp-3">{item.excerpt}</p>
               )}
-              <div className="flex items-center gap-2 text-primary text-sm font-medium">
-                <ArrowUpRight className="w-4 h-4" />
-                Open in app
-              </div>
             </div>
           </div>
         </CardContent>
@@ -291,11 +291,11 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
             onValueChange={setActiveTab}
             className="flex-1 overflow-hidden flex flex-col gap-3"
           >
-            <TabsList className="grid grid-cols-4 w-full bg-muted/50">
-              <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
-              <TabsTrigger value="devotionals">Devotionals ({counts.devotionals})</TabsTrigger>
-              <TabsTrigger value="audio">Audio ({counts.audio})</TabsTrigger>
-              <TabsTrigger value="videos">Videos ({counts.videos})</TabsTrigger>
+            <TabsList className="grid grid-cols-4 w-full bg-muted/50 text-xs">
+              <TabsTrigger className="px-2 py-2 leading-tight" value="all">All ({counts.all})</TabsTrigger>
+              <TabsTrigger className="px-2 py-2 leading-tight" value="devotionals">Devos ({counts.devotionals})</TabsTrigger>
+              <TabsTrigger className="px-2 py-2 leading-tight" value="audio">Audio ({counts.audio})</TabsTrigger>
+              <TabsTrigger className="px-2 py-2 leading-tight" value="videos">Videos ({counts.videos})</TabsTrigger>
             </TabsList>
 
             <div className="text-sm text-muted-foreground">
