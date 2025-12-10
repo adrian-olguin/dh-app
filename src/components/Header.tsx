@@ -1,8 +1,6 @@
-import { useState } from "react";
 import { Search, LogIn, Moon, Sun, Languages, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/UserMenu";
-import { AuthDialog } from "@/components/AuthDialog";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
@@ -27,7 +25,6 @@ export const Header = ({
   const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { i18n } = useTranslation();
-  const [authOpen, setAuthOpen] = useState(false);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -149,7 +146,7 @@ export const Header = ({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={() => setAuthOpen(true)}
+                  onClick={() => window.open("https://www.pastorrick.com/login", "_blank")}
                   className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
                 >
                   <LogIn className="w-5 h-5" />
@@ -159,8 +156,6 @@ export const Header = ({
           </div>
         </div>
       </header>
-
-      <AuthDialog open={authOpen} onOpenChange={setAuthOpen} />
     </>
   );
 };

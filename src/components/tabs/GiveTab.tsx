@@ -6,7 +6,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, CreditCard, Calendar, Users, Globe, BookOpen, TrendingUp } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { DonationHistory } from "@/components/DonationHistory";
 import { toast } from "sonner";
 import { buildDonationUrl } from "@/lib/donations";
 
@@ -349,10 +348,6 @@ export const GiveTab = () => {
         </p>
       </div>
 
-      {/* Donation History Section */}
-      <div className="mt-6">
-        <DonationHistory />
-      </div>
     </div>
   );
 };
