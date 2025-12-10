@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -121,7 +121,8 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
         id: podcast.published_at || podcast.id,
         title: podcast.title,
         description: podcast.description,
-        duration: podcast.duration,
+        // Duration in the feed is often missing; omit to avoid showing 0:00
+        duration: podcast.duration || undefined,
         date: podcast.published_at,
         type: "audio" as const,
       })) as AudioResult[];
@@ -214,7 +215,7 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
                         <span>{format(new Date(item.date), "MMM d, yyyy")}</span>
                       </>
                     )}
-                    {"duration" in item && item.duration && (
+                    {"duration" in item && item.duration && item.type !== "audio" && (
                       <>
                         <span>•</span>
                         <span>{item.duration}</span>
@@ -258,18 +259,11 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col gap-3">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Search className="w-5 h-5" />
-            Search Content
-          </DialogTitle>
-        </DialogHeader>
-
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search devotionals, podcasts, and videos"
+              placeholder="Find what you need"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-24"
