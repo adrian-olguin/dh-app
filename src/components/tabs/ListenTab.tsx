@@ -308,6 +308,8 @@ export const ListenTab = () => {
                 // User explicitly chose this episode – show it in the player AND auto-play it
                 setCurrentBroadcast(episode);
                 setAutoPlay(true);
+                // Scroll to top when episode is selected
+                window.scrollTo(0, 0);
               }}
               className={cn(
                 "hover:shadow-soft transition-all cursor-pointer border-2 animate-slide-up overflow-hidden",
