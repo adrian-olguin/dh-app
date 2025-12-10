@@ -247,7 +247,7 @@ export const ListenTab = () => {
           <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">
             {currentBroadcast.title}
           </h1>
-          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <span>{t("listen.pastor")}</span>
             {currentProgress > 0 && !isCurrentCompleted && (
               <span className="text-primary font-medium">
@@ -255,6 +255,11 @@ export const ListenTab = () => {
               </span>
             )}
           </div>
+          {currentBroadcast.description && (
+            <p className="text-sm text-muted-foreground mb-6">
+              {currentBroadcast.description}
+            </p>
+          )}
 
           {/* Audio Player – mounted but paused until user presses Play OR taps a tile */}
           <div className="mb-6">
@@ -312,7 +317,7 @@ export const ListenTab = () => {
               )}
               style={{ animationDelay: `${index * 0.1}s` }}
             >
-              <CardContent className="flex items-stretch gap-4 p-0 relative">
+              <CardContent className="flex items-stretch gap-2 p-0 relative">
                 {/* Progress bar at bottom */}
                 {progress > 0 && !isCompleted && (
                   <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
@@ -339,7 +344,7 @@ export const ListenTab = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 py-4 pr-2">
+                <div className="flex-1 py-3 pr-1">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold text-foreground text-base line-clamp-2 flex-1">
                       {episode.title}
@@ -348,8 +353,8 @@ export const ListenTab = () => {
                       <Check className="w-4 h-4 text-primary flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground mb-1">
-                    {t("listen.pastor")}
+                  <p className="text-[10px] text-muted-foreground mb-1 line-clamp-2">
+                    {episode.description}
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">
@@ -364,7 +369,7 @@ export const ListenTab = () => {
                 </div>
 
                 {/* Download Button */}
-                <div className="pr-4">
+                <div className="pr-2">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
