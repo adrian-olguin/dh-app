@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, Rewind, FastForward } from "lucide-react";
+import { Play, Pause, SkipBack, SkipForward, Volume2, VolumeX, RotateCcw, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
@@ -221,9 +221,11 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
               variant="ghost"
               size="icon"
               onClick={() => skip(-15)}
-              className="h-9 w-9"
+              className="h-9 w-9 relative flex items-center justify-center"
+              title="Rewind 15 seconds"
             >
-              <Rewind className="h-4 w-4" />
+              <RotateCcw className="h-4 w-4" />
+              <span className="absolute top-0.5 right-0.5 text-[7px] font-bold text-primary leading-none">15</span>
             </Button>
 
             <Button
@@ -243,9 +245,11 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
               variant="ghost"
               size="icon"
               onClick={() => skip(15)}
-              className="h-9 w-9"
+              className="h-9 w-9 relative flex items-center justify-center"
+              title="Fast forward 15 seconds"
             >
-              <FastForward className="h-4 w-4" />
+              <RotateCw className="h-4 w-4" />
+              <span className="absolute top-0.5 right-0.5 text-[7px] font-bold text-primary leading-none">15</span>
             </Button>
 
             <Button
