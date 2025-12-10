@@ -13,11 +13,25 @@ const Index = () => {
   const [activeTab, setActiveTab] = useState("read");
   const [searchOpen, setSearchOpen] = useState(false);
   const [christmasMode, setChristmasMode] = useState(false);
+  const [pendingSelection, setPendingSelection] = useState<{
+    type: "devotional" | "audio" | "video";
+    id: string;
+  } | null>(null);
 
   // Scroll to top when tab changes
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
+
+  const handleNavigateToContent = (payload: { type: "devotional" | "audio" | "video"; id: string }) => {
+    if (payload.type === "devotional") setActiveTab("read");
+    if (payload.type === "audio") setActiveTab("listen");
+    if (payload.type === "video") setActiveTab("watch");
+    setPendingSelection(payload);
+    setSearchOpen(false);
+  };
+
+  const clearSelection = () => setPendingSelection(null);
 
 return (
   <ErrorBoundary
@@ -27,7 +41,11 @@ return (
     <div className="min-h-screen bg-background">
       {christmasMode && <Snowfall />}
 
-      <SearchDialog open={searchOpen} onOpenChange={setSearchOpen} />
+      <SearchDialog
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        onNavigateToContent={handleNavigateToContent}
+      />
 
       <Header
         onSearchClick={() => setSearchOpen(true)}
@@ -37,13 +55,22 @@ return (
 
       <main className="pb-20 pt-4">
         <div className={activeTab === "watch" ? "block" : "hidden"}>
-          <WatchTab />
+          <WatchTab
+            externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
+            onSelectionConsumed={clearSelection}
+          />
         </div>
         <div className={activeTab === "listen" ? "block" : "hidden"}>
-          <ListenTab />
+          <ListenTab
+            externalSelection={pendingSelection?.type === "audio" ? pendingSelection : null}
+            onSelectionConsumed={clearSelection}
+          />
         </div>
         <div className={activeTab === "read" ? "block" : "hidden"}>
-          <ReadTab />
+          <ReadTab
+            externalSelection={pendingSelection?.type === "devotional" ? pendingSelection : null}
+            onSelectionConsumed={clearSelection}
+          />
         </div>
         <div className={activeTab === "give" ? "block" : "hidden"}>
           <GiveTab />

@@ -1,111 +1,22 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Calendar, Video, CalendarIcon, Download, Check } from "lucide-react";
+import { Play, Calendar, Video } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
-import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format } from "date-fns";
-import { es, pt } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import { useOfflineContent } from "@/hooks/useOfflineContent";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { VideoPlayer } from "@/components/VideoPlayer";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import natureFeatured from "@/assets/nature-featured.jpg";
-import tvThumbnail from "@/assets/TV-thumbnail.jpg"
+import { useWatchVideos, WatchVideo } from "@/hooks/useWatchVideos";
 
-export const WatchTab = () => {
-  const { t, i18n } = useTranslation();
-  const [selectedDate, setSelectedDate] = useState<Date>();
-  const { saveContent, isContentSaved } = useOfflineContent();
+interface WatchTabProps {
+  externalSelection?: { type: "video"; id: string } | null;
+  onSelectionConsumed?: () => void;
+}
+
+export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabProps) => {
+  const { t } = useTranslation();
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
-  const [currentVideo, setCurrentVideo] = useState<{
-    id: string;
-    title: string;
-    videoUrl: string;
-    thumbnail: string;
-  } | null>(null);
-  
-  const getLocale = () => {
-    switch (i18n.language) {
-      case 'es':
-        return es;
-      case 'pt':
-        return pt;
-      default:
-        return undefined;
-    }
-  };
-
-  const videoDate = new Date(2025, 12, 8); // December 8, 2025
-  
-  const featuredVideo = {
-    id: "video-2025-11-09",
-    date: format(videoDate, "MMMM d, yyyy", { locale: getLocale() }),
-    title: t('watch.featuredTitle'),
-    description: t('watch.featuredDescription'),
-    thumbnail: tvThumbnail,
-    duration: "28:45",
-    videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-  };
-
-  const recentVideos = [
-    { 
-      id: 1, 
-      title: t('watch.videos.powerOfFaith'), 
-      duration: "24:30",
-      thumbnail: tvThumbnail,
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-    },
-    { 
-      id: 2, 
-      title: t('watch.videos.livingWithPurpose'), 
-      duration: "31:15",
-      thumbnail: tvThumbnail,
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
-    },
-    { 
-      id: 3, 
-      title: t('watch.videos.overcomingChallenges'), 
-      duration: "26:50",
-      thumbnail: tvThumbnail,
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
-    },
-    { 
-      id: 4, 
-      title: t('watch.videos.walkingInLove'), 
-      duration: "29:10",
-      thumbnail: "https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=400&q=80",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
-    },
-    { 
-      id: 5, 
-      title: t('watch.videos.godsGrace'), 
-      duration: "27:35",
-      thumbnail: "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=400&q=80",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
-    },
-    { 
-      id: 6, 
-      title: t('watch.videos.buildingRelationships'), 
-      duration: "32:20",
-      thumbnail: "https://images.unsplash.com/photo-1516475429286-465d815a0df7?w=400&q=80",
-      videoUrl: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4"
-    },
-  ];
-
-  const isSaved = isContentSaved(featuredVideo.id);
-
-  const handleDownload = () => {
-    saveContent({
-      id: featuredVideo.id,
-      type: "video",
-      title: featuredVideo.title,
-      date: featuredVideo.date,
-      content: featuredVideo,
-    });
-  };
+  const { featuredVideo, recentVideos } = useWatchVideos();
+  const [currentVideo, setCurrentVideo] = useState<WatchVideo | null>(null);
 
   const handlePlayVideo = (video: { id: string | number; title: string; thumbnail: string; videoUrl: string }) => {
     const url = video.videoUrl;
@@ -123,9 +34,22 @@ export const WatchTab = () => {
       title: video.title,
       videoUrl: url,
       thumbnail: video.thumbnail,
+      duration: "0:00",
     });
     setIsPlayerOpen(true);
   };
+
+  useEffect(() => {
+    if (externalSelection?.type === "video") {
+      const target =
+        [featuredVideo, ...recentVideos].find((video) => video.id === externalSelection.id) ||
+        null;
+      if (target) {
+        handlePlayVideo(target);
+        onSelectionConsumed?.();
+      }
+    }
+  }, [externalSelection, featuredVideo, recentVideos, onSelectionConsumed]);
 
 
   return (

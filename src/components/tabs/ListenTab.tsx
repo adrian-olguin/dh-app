@@ -29,14 +29,37 @@ interface Episode {
   published_at: string;
 }
 
-export const ListenTab = () => {
+interface PodcastResponse {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  image_url: string;
+  audio_url: string;
+  published_at: string;
+}
+
+interface PlaybackPositionState {
+  episode_id: string;
+  position: number;
+  duration: number;
+  completed: boolean;
+}
+
+interface ListenTabProps {
+  externalSelection?: { type: "audio"; id: string } | null;
+  onSelectionConsumed?: () => void;
+}
+
+export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabProps) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const { saveContent, isContentSaved } = useOfflineContent();
   const [currentBroadcast, setCurrentBroadcast] = useState<Episode | null>(null);
   const { getPositions } = usePlaybackPositions();
-  const [playbackPositions, setPlaybackPositions] = useState<Map<string, any>>(new Map());
+  const [playbackPositions, setPlaybackPositions] = useState<Map<string, PlaybackPositionState>>(
+    new Map()
+  );
   const [autoPlay, setAutoPlay] = useState(false); // 👈 NEW: request auto-play when user taps a tile
 
   const {
@@ -63,8 +86,9 @@ export const ListenTab = () => {
       }
 
       // Transform podcasts to Episode format
-      return data.podcasts.map((podcast: any) => ({
-        id: podcast.id,
+      return (data.podcasts as PodcastResponse[]).map((podcast) => ({
+        // Use published_at as stable id so search + tab match
+        id: podcast.published_at || podcast.id,
         title: podcast.title,
         description: podcast.description,
         date: new Date(podcast.published_at).toLocaleDateString(
@@ -104,6 +128,18 @@ export const ListenTab = () => {
       getPositions().then(setPlaybackPositions);
     }
   }, [episodes, user, getPositions]);
+
+  useEffect(() => {
+    if (externalSelection?.type === "audio" && episodes.length > 0) {
+      const target = episodes.find((episode) => episode.id === externalSelection.id);
+      if (target) {
+        setCurrentBroadcast(target);
+        setAutoPlay(true);
+        window.scrollTo(0, 0);
+        onSelectionConsumed?.();
+      }
+    }
+  }, [externalSelection, episodes, onSelectionConsumed]);
 
   if (error) {
     toast.error("Failed to load episodes. Click retry to try again.");

@@ -1,108 +1,250 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BookmarkButton } from "@/components/BookmarkButton";
-import { Search, Calendar, Video, Headphones, BookOpen, X, CalendarIcon } from "lucide-react";
+import { Search, Video, Headphones, BookOpen, Loader2, ArrowUpRight } from "lucide-react";
 import { format } from "date-fns";
-import { cn } from "@/lib/utils";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
+import { useWatchVideos } from "@/hooks/useWatchVideos";
 
 interface SearchDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onNavigateToContent: (payload: { type: "devotional" | "audio" | "video"; id: string }) => void;
 }
 
-// Mock data for demonstration
-const mockMessages = [
-  { id: 1, title: "Finding Peace in Difficult Times", type: "video", date: "2024-01-15", topic: "Faith", duration: "28:45" },
-  { id: 2, title: "The Power of Prayer", type: "video", date: "2024-01-08", topic: "Prayer", duration: "32:10" },
-  { id: 3, title: "Walking in Love", type: "video", date: "2024-01-01", topic: "Love", duration: "25:30" },
-];
+type DevotionalResult = {
+  id: string; // stable id (published_at)
+  title: string;
+  type: "devotional";
+  date: string;
+  verse?: string;
+  excerpt?: string;
+};
 
-const mockDevotionals = [
-  { id: 1, title: "Hope for Today", type: "devotional", date: "2024-01-15", topic: "Hope", verse: "Psalm 46:1" },
-  { id: 2, title: "God's Faithfulness", type: "devotional", date: "2024-01-14", topic: "Faith", verse: "Lamentations 3:22-23" },
-  { id: 3, title: "Peace in the Storm", type: "devotional", date: "2024-01-13", topic: "Peace", verse: "Philippians 4:6-7" },
-];
+type AudioResult = {
+  id: string; // stable id (published_at)
+  title: string;
+  type: "audio";
+  date: string;
+  description?: string;
+  duration?: string;
+};
 
-const mockAudioEpisodes = [
-  { id: 1, title: "Daily Hope - Morning Encouragement", type: "audio", date: "2024-01-15", topic: "Encouragement", duration: "15:20" },
-  { id: 2, title: "Overcoming Anxiety", type: "audio", date: "2024-01-14", topic: "Peace", duration: "18:45" },
-  { id: 3, title: "The Gift of Gratitude", type: "audio", date: "2024-01-13", topic: "Gratitude", duration: "16:30" },
-];
+type VideoResult = {
+  id: string;
+  title: string;
+  type: "video";
+  date?: string;
+  duration?: string;
+};
 
-export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
+type SearchResult = DevotionalResult | AudioResult | VideoResult;
+
+type SupabaseDevotional = {
+  id: string;
+  title: string;
+  excerpt: string;
+  verse?: string;
+  image_url?: string;
+  published_at: string;
+};
+
+type SupabasePodcast = {
+  id: string;
+  title: string;
+  description: string;
+  duration: string;
+  image_url?: string;
+  audio_url?: string;
+  published_at: string;
+};
+
+export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: SearchDialogProps) => {
+  const { i18n } = useTranslation();
+  const { featuredVideo, recentVideos } = useWatchVideos();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTopic, setSelectedTopic] = useState<string>("all");
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const [activeTab, setActiveTab] = useState("all");
 
-  const topics = ["all", "Faith", "Hope", "Love", "Prayer", "Peace", "Encouragement", "Gratitude"];
+  const {
+    data: devotionals = [],
+    isLoading: loadingDevotionals,
+  } = useQuery({
+    queryKey: ["search-devotionals", i18n.language],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-pastor-rick-content", {
+        body: { type: "devotional", language: i18n.language },
+      });
 
-  const filterResults = (items: any[]) => {
-    return items.filter(item => {
-      const matchesQuery = searchQuery === "" || 
-        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (item.verse && item.verse.toLowerCase().includes(searchQuery.toLowerCase()));
-      
-      const matchesTopic = selectedTopic === "all" || item.topic === selectedTopic;
-      
-      const matchesDate = !selectedDate || 
-        format(new Date(item.date), "yyyy-MM-dd") === format(selectedDate, "yyyy-MM-dd");
-      
-      return matchesQuery && matchesTopic && matchesDate;
-    });
+      if (error) throw error;
+      if (!data?.success || !data?.articles) {
+        throw new Error("Failed to fetch devotionals");
+      }
+
+      return (data.articles as SupabaseDevotional[]).map((article) => ({
+        // Use published_at as stable id to align with ReadTab list
+        id: article.published_at || article.id,
+        title: article.title,
+        excerpt: article.excerpt,
+        verse: article.verse,
+        date: article.published_at,
+        type: "devotional" as const,
+      })) as DevotionalResult[];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+
+  const {
+    data: audioEpisodes = [],
+    isLoading: loadingAudio,
+  } = useQuery({
+    queryKey: ["search-podcasts", i18n.language],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("fetch-pastor-rick-content", {
+        body: { type: "podcast", language: i18n.language },
+      });
+
+      if (error) throw error;
+      if (!data?.success || !data?.podcasts) {
+        throw new Error("Failed to fetch episodes");
+      }
+
+      return (data.podcasts as SupabasePodcast[]).map((podcast) => ({
+        // Use published_at as stable id to align with ListenTab list
+        id: podcast.published_at || podcast.id,
+        title: podcast.title,
+        description: podcast.description,
+        duration: podcast.duration,
+        date: podcast.published_at,
+        type: "audio" as const,
+      })) as AudioResult[];
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 2,
+    refetchOnWindowFocus: false,
+  });
+
+  const videos: VideoResult[] = useMemo(
+    () =>
+      [featuredVideo, ...recentVideos].map((video) => ({
+        id: video.id,
+        title: video.title,
+        duration: video.duration,
+        type: "video" as const,
+      })),
+    [featuredVideo, recentVideos]
+  );
+
+  const allResults: SearchResult[] = useMemo(
+    () => [...devotionals, ...audioEpisodes, ...videos],
+    [devotionals, audioEpisodes, videos]
+  );
+
+  const filteredResults = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const byTab = (item: SearchResult) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "devotionals") return item.type === "devotional";
+      if (activeTab === "audio") return item.type === "audio";
+      if (activeTab === "videos") return item.type === "video";
+      return true;
+    };
+
+    const byText = (item: SearchResult) => {
+      if (!query) return true;
+      const haystack = [
+        item.title,
+        "description" in item ? item.description : "",
+        "excerpt" in item ? item.excerpt : "",
+        "verse" in item ? item.verse : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    };
+
+    return allResults.filter((item) => byTab(item) && byText(item));
+  }, [allResults, activeTab, searchQuery]);
+
+  const counts = {
+    all: allResults.length,
+    devotionals: allResults.filter((item) => item.type === "devotional").length,
+    audio: allResults.filter((item) => item.type === "audio").length,
+    videos: allResults.filter((item) => item.type === "video").length,
   };
 
-  const allResults = [
-    ...filterResults(mockMessages),
-    ...filterResults(mockDevotionals),
-    ...filterResults(mockAudioEpisodes),
-  ];
+  const handleSelect = (item: SearchResult) => {
+    onNavigateToContent({ type: item.type, id: item.id });
+    onOpenChange(false);
+  };
 
-  const renderResultCard = (item: any) => {
+  const renderResultCard = (item: SearchResult) => {
     const Icon = item.type === "video" ? Video : item.type === "audio" ? Headphones : BookOpen;
     const contentType = item.type === "video" ? "message" : item.type;
-    
+
     return (
-      <Card key={`${item.type}-${item.id}`} className="hover:shadow-md transition-shadow">
+      <Card
+        key={`${item.type}-${item.id}`}
+        className="hover:shadow-md transition-shadow cursor-pointer border-border/80"
+        onClick={() => handleSelect(item)}
+      >
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <Icon className="w-5 h-5 text-primary" />
             </div>
-            <div className="flex-1">
-              <div className="flex items-start justify-between mb-1">
-                <h3 className="font-semibold text-foreground">{item.title}</h3>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <div>
+                  <h3 className="font-semibold text-foreground leading-snug">{item.title}</h3>
+                  <div className="text-sm text-muted-foreground flex flex-wrap gap-2 items-center">
+                    <span className="capitalize">{item.type}</span>
+                    {item.date && (
+                      <>
+                        <span>•</span>
+                        <span>{format(new Date(item.date), "MMM d, yyyy")}</span>
+                      </>
+                    )}
+                    {"duration" in item && item.duration && (
+                      <>
+                        <span>•</span>
+                        <span>{item.duration}</span>
+                      </>
+                    )}
+                    {"verse" in item && item.verse && (
+                      <>
+                        <span>•</span>
+                        <span>{item.verse}</span>
+                      </>
+                    )}
+                  </div>
+                </div>
                 <BookmarkButton
                   contentType={contentType}
                   contentId={item.id.toString()}
                   title={item.title}
                 />
               </div>
-              <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                <span className="capitalize">{item.type}</span>
-                <span>•</span>
-                <span>{format(new Date(item.date), "MMM d, yyyy")}</span>
-                <span>•</span>
-                <span className="text-primary">{item.topic}</span>
-                {item.duration && (
-                  <>
-                    <span>•</span>
-                    <span>{item.duration}</span>
-                  </>
-                )}
-                {item.verse && (
-                  <>
-                    <span>•</span>
-                    <span>{item.verse}</span>
-                  </>
-                )}
+              {"description" in item && item.description && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{item.description}</p>
+              )}
+              {"excerpt" in item && item.excerpt && (
+                <p className="text-sm text-muted-foreground line-clamp-2">{item.excerpt}</p>
+              )}
+              <div className="flex items-center gap-2 text-primary text-sm font-medium">
+                <ArrowUpRight className="w-4 h-4" />
+                Open in app
               </div>
             </div>
           </div>
@@ -111,15 +253,11 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
     );
   };
 
-  const clearFilters = () => {
-    setSearchQuery("");
-    setSelectedTopic("all");
-    setSelectedDate(undefined);
-  };
+  const resetSearch = () => setSearchQuery("");
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden flex flex-col gap-3">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Search className="w-5 h-5" />
@@ -128,113 +266,57 @@ export const SearchDialog = ({ open, onOpenChange }: SearchDialogProps) => {
         </DialogHeader>
 
         <div className="space-y-4 flex-1 overflow-hidden flex flex-col">
-          {/* Search Input */}
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
-              placeholder="Search by keyword..."
+              placeholder="Search devotionals, podcasts, and videos"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
+              className="pl-9 pr-24"
             />
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-wrap gap-2">
-            <Select value={selectedTopic} onValueChange={setSelectedTopic}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Topic" />
-              </SelectTrigger>
-              <SelectContent>
-                {topics.map((topic) => (
-                  <SelectItem key={topic} value={topic}>
-                    {topic === "all" ? "All Topics" : topic}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  className={cn(
-                    "gap-2",
-                    selectedDate && "text-primary"
-                  )}
-                >
-                  <CalendarIcon className="w-4 h-4" />
-                  {selectedDate ? format(selectedDate, "MMM d, yyyy") : "Select Date"}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <CalendarComponent
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date > new Date()}
-                  initialFocus
-                />
-              </PopoverContent>
-            </Popover>
-
-            {(searchQuery || selectedTopic !== "all" || selectedDate) && (
-              <Button variant="ghost" size="sm" onClick={clearFilters} className="gap-2">
-                <X className="w-4 h-4" />
-                Clear Filters
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3"
+                onClick={resetSearch}
+              >
+                Clear
               </Button>
             )}
           </div>
 
-          {/* Results Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 overflow-hidden flex flex-col">
-            <TabsList className="grid grid-cols-4 w-full">
-              <TabsTrigger value="all">All ({allResults.length})</TabsTrigger>
-              <TabsTrigger value="videos">Videos ({filterResults(mockMessages).length})</TabsTrigger>
-              <TabsTrigger value="devotionals">Devotionals ({filterResults(mockDevotionals).length})</TabsTrigger>
-              <TabsTrigger value="audio">Audio ({filterResults(mockAudioEpisodes).length})</TabsTrigger>
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="flex-1 overflow-hidden flex flex-col gap-3"
+          >
+            <TabsList className="grid grid-cols-4 w-full bg-muted/50">
+              <TabsTrigger value="all">All ({counts.all})</TabsTrigger>
+              <TabsTrigger value="devotionals">Devotionals ({counts.devotionals})</TabsTrigger>
+              <TabsTrigger value="audio">Audio ({counts.audio})</TabsTrigger>
+              <TabsTrigger value="videos">Videos ({counts.videos})</TabsTrigger>
             </TabsList>
 
-            <div className="flex-1 overflow-y-auto mt-4">
-              <TabsContent value="all" className="space-y-3 mt-0">
-                {allResults.length > 0 ? (
-                  allResults.map(renderResultCard)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No results found. Try adjusting your filters.
-                  </div>
-                )}
-              </TabsContent>
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredResults.length} result{filteredResults.length === 1 ? "" : "s"}
+            </div>
 
-              <TabsContent value="videos" className="space-y-3 mt-0">
-                {filterResults(mockMessages).length > 0 ? (
-                  filterResults(mockMessages).map(renderResultCard)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No video messages found.
-                  </div>
-                )}
-              </TabsContent>
+            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
+              {(loadingDevotionals || loadingAudio) && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Loading content from Read, Listen, and Watch…
+                </div>
+              )}
 
-              <TabsContent value="devotionals" className="space-y-3 mt-0">
-                {filterResults(mockDevotionals).length > 0 ? (
-                  filterResults(mockDevotionals).map(renderResultCard)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No devotionals found.
-                  </div>
-                )}
-              </TabsContent>
+              {!loadingDevotionals && !loadingAudio && filteredResults.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  No results found. Try another keyword.
+                </div>
+              )}
 
-              <TabsContent value="audio" className="space-y-3 mt-0">
-                {filterResults(mockAudioEpisodes).length > 0 ? (
-                  filterResults(mockAudioEpisodes).map(renderResultCard)
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    No audio episodes found.
-                  </div>
-                )}
-              </TabsContent>
+              {filteredResults.map(renderResultCard)}
             </div>
           </Tabs>
         </div>

@@ -1,13 +1,9 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Calendar, CalendarIcon, Download, Check, Minus, Plus, RotateCcw } from "lucide-react";
+import { BookOpen, Calendar, Download, Check, Minus, Plus, RotateCcw } from "lucide-react";
 import { ShareButton } from "@/components/ShareButton";
-import { useState } from "react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { format } from "date-fns";
 import { es, pt } from "date-fns/locale";
-import { cn } from "@/lib/utils";
 import { useOfflineContent } from "@/hooks/useOfflineContent";
 import { useTranslation } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -27,9 +23,23 @@ interface Article {
   date: string;
 }
 
-export const ReadTab = () => {
+interface SupabaseArticle {
+  id: string;
+  title: string;
+  excerpt: string;
+  content: string;
+  verse?: string;
+  image_url?: string;
+  published_at: string;
+}
+
+interface ReadTabProps {
+  externalSelection?: { type: "devotional"; id: string } | null;
+  onSelectionConsumed?: () => void;
+}
+
+export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps) => {
   const { t, i18n } = useTranslation();
-  const [selectedDate, setSelectedDate] = useState<Date>();
   const { saveContent, isContentSaved } = useOfflineContent();
   const [fontSize, setFontSize] = useState(15);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -60,8 +70,9 @@ export const ReadTab = () => {
         throw new Error('Failed to fetch devotionals');
       }
       
-      return data.articles.map((article: any) => ({
-        id: article.id,
+      return (data.articles as SupabaseArticle[]).map((article) => ({
+        // Use published_at as stable id so search + tab match
+        id: article.published_at || article.id,
         title: article.title,
         excerpt: article.excerpt,
         content: article.content,
@@ -81,6 +92,16 @@ export const ReadTab = () => {
     refetchOnWindowFocus: false,
   });
 
+  useEffect(() => {
+    if (externalSelection?.type === "devotional" && articles.length) {
+      const match = articles.find((article) => article.id === externalSelection.id);
+      if (match) {
+        setSelectedArticle(match);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        onSelectionConsumed?.();
+      }
+    }
+  }, [externalSelection, articles, onSelectionConsumed]);
 
   if (error) {
     toast.error('Failed to load devotionals. Click retry to try again.');
