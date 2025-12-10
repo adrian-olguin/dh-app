@@ -156,7 +156,8 @@ export const ReadTab = () => {
         </Button>
         <Card className="shadow-elevated overflow-hidden">
           <CardHeader className="pb-6 pt-8 px-8 bg-muted/30">
-            <CardTitle className="text-2xl mb-4">{selectedArticle.title}</CardTitle>
+            <CardTitle className="text-2xl mb-2">{selectedArticle.title}</CardTitle>
+            <p className="text-sm text-muted-foreground mb-4">{selectedArticle.date}</p>
             {selectedArticle.verse && (
               <blockquote className="border-l-4 border-primary pl-4 italic" style={{ fontSize: `${fontSize}px` }}>
                 {selectedArticle.verse}
