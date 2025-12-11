@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Play, Calendar, Headphones, Download, Check } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ShareButton } from "@/components/ShareButton";
 // import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 // import { Calendar as CalendarComponent } from "@/components/ui/calendar";
@@ -59,7 +59,7 @@ interface ListenTabProps {
 export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabProps) => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const { saveContent, isContentSaved } = useOfflineContent();
+  const { saveContent } = useOfflineContent();
   const [currentBroadcast, setCurrentBroadcast] = useState<Episode | null>(null);
   const { getPositions } = usePlaybackPositions();
   const [playbackPositions, setPlaybackPositions] = useState<Map<string, PlaybackPositionState>>(
@@ -67,6 +67,35 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
   );
   const [autoPlay, setAutoPlay] = useState(false); // 👈 NEW: request auto-play when user taps a tile
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [recentlyDownloadedIds, setRecentlyDownloadedIds] = useState<Set<string>>(new Set());
+  const downloadIndicatorTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+
+  const showDownloadedIndicator = (episodeId: string, durationMs = 4000) => {
+    setRecentlyDownloadedIds((prev) => {
+      const next = new Set(prev);
+      next.add(episodeId);
+      return next;
+    });
+
+    if (downloadIndicatorTimeouts.current[episodeId]) {
+      clearTimeout(downloadIndicatorTimeouts.current[episodeId]);
+    }
+
+    downloadIndicatorTimeouts.current[episodeId] = setTimeout(() => {
+      setRecentlyDownloadedIds((prev) => {
+        const next = new Set(prev);
+        next.delete(episodeId);
+        return next;
+      });
+      delete downloadIndicatorTimeouts.current[episodeId];
+    }, durationMs);
+  };
+
+  useEffect(() => {
+    return () => {
+      Object.values(downloadIndicatorTimeouts.current).forEach(clearTimeout);
+    };
+  }, []);
 
   const sanitizeFileName = (title: string) =>
     title.replace(/[^a-z0-9_-]+/gi, "_").replace(/_{2,}/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) ||
@@ -98,6 +127,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     const filesystemAvailable =
       Capacitor.isNativePlatform() &&
       typeof (Filesystem as any)?.writeFile === "function";
+
+    let downloadCompleted = false;
 
     try {
       setDownloadingId(episode.id);
@@ -162,6 +193,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
             ? "Downloads/DailyHope"
             : "Files → On My iPhone → DailyHope";
         toast.success(`Audio saved (${locationHint})`);
+        downloadCompleted = true;
 
         // Optional: surface a share dialog to move the file if desired
         try {
@@ -193,7 +225,11 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           });
 
           toast.success("Download started");
+          downloadCompleted = true;
         }
+      }
+      if (downloadCompleted) {
+        showDownloadedIndicator(episode.id);
       }
     } catch (error) {
       console.error("Error downloading audio", error);
@@ -352,7 +388,10 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     );
   }
 
-  const isSaved = isContentSaved(currentBroadcast.id);
+  const isCurrentRecentlyDownloaded = currentBroadcast
+    ? recentlyDownloadedIds.has(currentBroadcast.id)
+    : false;
+  const isCurrentDownloading = downloadingId === currentBroadcast?.id;
   const currentPosition = playbackPositions.get(currentBroadcast.id);
   const currentProgress =
     currentPosition && currentPosition.duration > 0
@@ -395,18 +434,24 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                       onClick={() => downloadAudioFile(currentBroadcast)}
                       variant="ghost"
                       size="icon"
-                      disabled={isSaved || downloadingId === currentBroadcast.id}
+                      disabled={isCurrentDownloading || isCurrentRecentlyDownloaded}
                       className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                     >
-                      {isSaved ? (
-                        <Check className="w-4 h-4" />
+                      {isCurrentRecentlyDownloaded ? (
+                        <Check className="w-4 h-4 animate-pulse" />
                       ) : (
                         <Download className="w-4 h-4" />
                       )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{isSaved ? "Downloaded" : "Download"}</p>
+                    <p>
+                      {isCurrentDownloading
+                        ? "Downloading..."
+                        : isCurrentRecentlyDownloaded
+                          ? "Downloaded"
+                          : "Download"}
+                    </p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -471,6 +516,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
               ? (position.position / position.duration) * 100
               : 0;
           const isCompleted = position?.completed || false;
+          const isEpisodeDownloading = downloadingId === episode.id;
+          const isEpisodeRecentlyDownloaded = recentlyDownloadedIds.has(episode.id);
 
           return (
             <Card
@@ -550,17 +597,14 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          disabled={
-                            isContentSaved(episode.id) ||
-                            downloadingId === episode.id
-                          }
+                          disabled={isEpisodeDownloading || isEpisodeRecentlyDownloaded}
                           onClick={async (e) => {
                             e.stopPropagation();
                             await downloadAudioFile(episode);
                           }}
                         >
-                          {isContentSaved(episode.id) ? (
-                            <Check className="w-4 h-4 text-primary" />
+                          {isEpisodeRecentlyDownloaded ? (
+                            <Check className="w-4 h-4 text-primary animate-pulse" />
                           ) : (
                             <Download className="w-4 h-4" />
                           )}
@@ -568,9 +612,11 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                       </TooltipTrigger>
                       <TooltipContent>
                         <p>
-                          {isContentSaved(episode.id)
-                            ? "Downloaded"
-                            : "Download"}
+                          {isEpisodeDownloading
+                            ? "Downloading..."
+                            : isEpisodeRecentlyDownloaded
+                              ? "Downloaded"
+                              : "Download"}
                         </p>
                       </TooltipContent>
                     </Tooltip>
