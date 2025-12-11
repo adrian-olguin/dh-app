@@ -2,7 +2,6 @@ import { Share2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { safeWindow } from "@/lib/platform";
 import { Share } from "@capacitor/share";
 import { Capacitor } from "@capacitor/core";
 
@@ -16,11 +15,21 @@ interface ShareButtonProps {
 export const ShareButton = ({
   title,
   text,
-  url = safeWindow.location.href,
+  url,
   label = "Share Devotional",
 }: ShareButtonProps) => {
   const { t } = useTranslation();
-  const shareData = { title, text, url };
+  // Use the provided URL only if it's a valid external URL
+  // Never share capacitor://localhost or other internal URLs
+  const getShareUrl = (): string => {
+    if (url && (url.startsWith('http://') || url.startsWith('https://'))) {
+      return url;
+    }
+    // Fallback to main website if no valid external URL is provided
+    return 'https://www.pastorrick.com';
+  };
+  const shareUrl = getShareUrl();
+  const shareData = { title, text, url: shareUrl };
 
   const handleShare = async () => {
     try {
@@ -41,7 +50,7 @@ export const ShareButton = ({
       // 3) Fallback: copy link to clipboard
       if (typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(
-          `${title}\n\n${text}\n\n${url}`
+          `${title}\n\n${text}\n\n${shareUrl}`
         );
         toast.success("Link copied to clipboard");
         return;

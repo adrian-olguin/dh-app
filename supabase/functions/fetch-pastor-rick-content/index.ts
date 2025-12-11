@@ -88,7 +88,36 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
     const title = extractTagContent(itemXml, 'title');
     const description = extractTagContent(itemXml, 'description');
     const pubDate = extractTagContent(itemXml, 'pubDate');
-    const link = extractTagContent(itemXml, 'link') || extractTagContent(itemXml, 'guid');
+    
+    // Extract link - the <link> tag is typically at the end of the item after content:encoded
+    // Use regex to reliably find it since it may come after large CDATA content
+    let link = '';
+    
+    // Try regex first - more reliable for finding link after content:encoded
+    const linkMatch = itemXml.match(/<link>([^<]+)<\/link>/);
+    if (linkMatch && linkMatch[1]) {
+      link = linkMatch[1].trim();
+    }
+    
+    // Fallback: try standard extraction
+    if (!link) {
+      link = extractTagContent(itemXml, 'link');
+    }
+    
+    // Fallback: try Atom-style link with href attribute
+    if (!link) {
+      link = extractAttribute(itemXml, 'link', 'href');
+    }
+    
+    // Fallback: try guid if it looks like a URL
+    if (!link) {
+      const guid = extractTagContent(itemXml, 'guid');
+      if (guid && (guid.startsWith('http://') || guid.startsWith('https://'))) {
+        link = guid;
+      }
+    }
+    
+    console.log(`Item link extracted: "${link}"`);
     
     // Try multiple ways to get the image
     let imageUrl = extractAttribute(itemXml, 'itunes:image', 'href');

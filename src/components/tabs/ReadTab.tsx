@@ -40,6 +40,32 @@ interface ReadTabProps {
   onSelectionConsumed?: () => void;
 }
 
+// Helper function to construct devotional URL from title and date
+// URL pattern: https://www.pastorrick.com/{lang}/current-teaching/devotional/{slug-year}
+const constructDevotionalUrl = (title: string, publishedAt: string, language: string): string => {
+  const year = new Date(publishedAt).getFullYear();
+  const slug = title
+    .toLowerCase()
+    .replace(/['']/g, '') // Remove apostrophes
+    .replace(/[^a-z0-9\s-]/g, '') // Remove special characters except spaces and hyphens
+    .replace(/\s+/g, '-') // Replace spaces with hyphens
+    .replace(/-+/g, '-') // Replace multiple hyphens with single
+    .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+  
+  const lang = language === 'es' ? 'es' : 'en';
+  return `https://www.pastorrick.com/${lang}/current-teaching/devotional/${slug}-${year}`;
+};
+
+// Helper to get the best available URL for sharing
+const getShareUrl = (article: { link: string; title: string; published_at: string }, language: string): string => {
+  // If we have a valid link from the API, use it
+  if (article.link && (article.link.startsWith('http://') || article.link.startsWith('https://'))) {
+    return article.link;
+  }
+  // Otherwise construct the URL from title and date
+  return constructDevotionalUrl(article.title, article.published_at, language);
+};
+
 export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps) => {
   const { t, i18n } = useTranslation();
   const { saveContent, isContentSaved } = useOfflineContent();
@@ -201,7 +227,7 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
               <ShareButton 
                 title={selectedArticle.title} 
                 text={selectedArticle.excerpt} 
-                url={selectedArticle.link} 
+                url={getShareUrl(selectedArticle, i18n.language)} 
                 label="Share" 
               />
             </div>
