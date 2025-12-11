@@ -88,6 +88,7 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
     const title = extractTagContent(itemXml, 'title');
     const description = extractTagContent(itemXml, 'description');
     const pubDate = extractTagContent(itemXml, 'pubDate');
+    const link = extractTagContent(itemXml, 'link') || extractTagContent(itemXml, 'guid');
     
     // Try multiple ways to get the image
     let imageUrl = extractAttribute(itemXml, 'itunes:image', 'href');
@@ -119,6 +120,10 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
     
     console.log(`Item ${items.length}: title="${title}", hasImage=${!!imageUrl}`);
     
+    const stableId =
+      link ||
+      (pubDate ? new Date(pubDate).toISOString() : `${type}-${items.length}-${Date.now()}`);
+    
     if (type === 'podcast') {
       const audioUrl = extractAttribute(itemXml, 'enclosure', 'url');
       const duration = extractTagContent(itemXml, 'itunes:duration');
@@ -126,12 +131,13 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
       console.log(`Podcast audio URL: ${audioUrl}, duration: ${duration}`);
       
       items.push({
-        id: `podcast-${items.length}-${Date.now()}`,
+        id: stableId,
         title: title || 'Untitled',
         description: description || '',
         audio_url: audioUrl || '',
         duration: duration || '0:00',
         image_url: imageUrl || '',
+        link: link || audioUrl || '',
         published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         type: 'podcast'
       });
@@ -140,12 +146,13 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
       const verse = ''; // RSS doesn't have verse field, would need to parse from content
       
       items.push({
-        id: `devotional-${items.length}-${Date.now()}`,
+        id: stableId,
         title: title || 'Untitled',
         excerpt: description || '',
         content: content || '',
         verse: verse,
         image_url: imageUrl || '',
+        link: link || '',
         published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         type: 'article'
       });

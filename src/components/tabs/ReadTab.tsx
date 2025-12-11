@@ -21,6 +21,7 @@ interface Article {
   image_url: string;
   published_at: string;
   date: string;
+  link: string;
 }
 
 interface SupabaseArticle {
@@ -31,6 +32,7 @@ interface SupabaseArticle {
   verse?: string;
   image_url?: string;
   published_at: string;
+  link?: string;
 }
 
 interface ReadTabProps {
@@ -71,14 +73,15 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
       }
       
       return (data.articles as SupabaseArticle[]).map((article) => ({
-        // Use published_at as stable id so search + tab match
-        id: article.published_at || article.id,
+        // Prefer canonical link as id so search + tab match
+        id: article.link || article.published_at || article.id,
         title: article.title,
         excerpt: article.excerpt,
         content: article.content,
         verse: article.verse,
         image_url: article.image_url,
         published_at: article.published_at,
+        link: article.link || '',
         date: new Date(article.published_at).toLocaleDateString(i18n.language === 'es' ? 'es-ES' : 'en-US', { 
           year: 'numeric', 
           month: 'long', 
@@ -195,7 +198,12 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
               dangerouslySetInnerHTML={{ __html: stripImagesFromContent(selectedArticle.content) }} 
             />
             <div className="pt-6">
-              <ShareButton title={selectedArticle.title} text={selectedArticle.excerpt} label="Share" />
+              <ShareButton 
+                title={selectedArticle.title} 
+                text={selectedArticle.excerpt} 
+                url={selectedArticle.link} 
+                label="Share" 
+              />
             </div>
           </CardContent>
         </Card>

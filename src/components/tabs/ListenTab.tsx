@@ -17,6 +17,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePlaybackPositions } from "@/hooks/usePlaybackPosition";
 import { useAuth } from "@/contexts/AuthContext";
+import { Capacitor } from "@capacitor/core";
+import { Filesystem, Directory } from "@capacitor/filesystem";
 
 interface Episode {
   id: string;
@@ -27,6 +29,7 @@ interface Episode {
   thumbnail: string;
   audioUrl: string;
   published_at: string;
+  link: string;
 }
 
 interface PodcastResponse {
@@ -37,6 +40,7 @@ interface PodcastResponse {
   image_url: string;
   audio_url: string;
   published_at: string;
+  link?: string;
 }
 
 interface PlaybackPositionState {
@@ -61,6 +65,100 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     new Map()
   );
   const [autoPlay, setAutoPlay] = useState(false); // 👈 NEW: request auto-play when user taps a tile
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const sanitizeFileName = (title: string) =>
+    title.replace(/[^a-z0-9_-]+/gi, "_").replace(/_{2,}/g, "_").replace(/^_+|_+$/g, "").slice(0, 80) ||
+    "daily-hope-audio";
+
+  const blobToBase64 = (blob: Blob) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onerror = reject;
+      reader.onload = () => {
+        const result = reader.result as string;
+        const base64 = result.includes(",") ? result.split(",")[1] : result;
+        resolve(base64);
+      };
+      reader.readAsDataURL(blob);
+    });
+
+  const downloadAudioFile = async (episode: Episode) => {
+    if (!episode.audioUrl) {
+      toast.error("No audio file available to download");
+      return;
+    }
+
+    const fileName = `${sanitizeFileName(episode.title)}.mp3`;
+
+    try {
+      setDownloadingId(episode.id);
+
+      if (Capacitor.isNativePlatform()) {
+        let savedPath: string | null = null;
+
+        try {
+          const filesystemWithDownload = Filesystem as any;
+          if (typeof filesystemWithDownload?.downloadFile === "function") {
+            const result = await filesystemWithDownload.downloadFile({
+              url: episode.audioUrl,
+              directory: Directory.Documents,
+              path: `DailyHope/${fileName}`,
+              recursive: true,
+            });
+            savedPath = result?.path || result?.uri || null;
+          }
+        } catch (downloadError) {
+          console.warn("downloadFile unsupported, falling back to writeFile", downloadError);
+        }
+
+        if (!savedPath) {
+          const response = await fetch(episode.audioUrl);
+          const blob = await response.blob();
+          const base64Data = await blobToBase64(blob);
+          const result = await Filesystem.writeFile({
+            path: `DailyHope/${fileName}`,
+            data: base64Data,
+            directory: Directory.Documents,
+            recursive: true,
+          });
+          savedPath = result?.uri || result?.path || null;
+        }
+
+        saveContent({
+          id: episode.id,
+          type: "audio",
+          title: episode.title,
+          date: episode.date,
+          content: { ...episode, localPath: savedPath || undefined },
+        });
+
+        toast.success("Audio downloaded to Files app");
+      } else {
+        const anchor = document.createElement("a");
+        anchor.href = episode.audioUrl;
+        anchor.download = fileName;
+        anchor.target = "_blank";
+        anchor.rel = "noopener";
+        anchor.click();
+
+        saveContent({
+          id: episode.id,
+          type: "audio",
+          title: episode.title,
+          date: episode.date,
+          content: episode,
+        });
+
+        toast.success("Download started");
+      }
+    } catch (error) {
+      console.error("Error downloading audio", error);
+      toast.error("Could not download audio");
+    } finally {
+      setDownloadingId(null);
+    }
+  };
 
   const {
     data: episodes = [],
@@ -87,8 +185,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
 
       // Transform podcasts to Episode format
       return (data.podcasts as PodcastResponse[]).map((podcast) => ({
-        // Use published_at as stable id so search + tab match
-        id: podcast.published_at || podcast.id,
+        // Prefer canonical link as id so search + tab match
+        id: podcast.link || podcast.published_at || podcast.id,
         title: podcast.title,
         description: podcast.description,
         date: new Date(podcast.published_at).toLocaleDateString(
@@ -103,6 +201,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
         thumbnail: podcast.image_url,
         audioUrl: podcast.audio_url,
         published_at: podcast.published_at,
+        link: podcast.link || podcast.audio_url || "",
       })) as Episode[];
     },
     staleTime: 5 * 60 * 1000,
@@ -216,16 +315,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
       : 0;
   const isCurrentCompleted = currentPosition?.completed || false;
 
-  const handleDownload = () => {
-    saveContent({
-      id: currentBroadcast.id,
-      type: "audio",
-      title: currentBroadcast.title,
-      date: currentBroadcast.date,
-      content: currentBroadcast,
-    });
-  };
-
   return (
     <div className="pb-4 pt-4 px-4 max-w-md mx-auto">
       {/* Unified Player Card */}
@@ -258,10 +347,10 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      onClick={handleDownload}
+                      onClick={() => downloadAudioFile(currentBroadcast)}
                       variant="ghost"
                       size="icon"
-                      disabled={isSaved}
+                      disabled={isSaved || downloadingId === currentBroadcast.id}
                       className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
                     >
                       {isSaved ? (
@@ -314,6 +403,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
             <ShareButton
               title={currentBroadcast.title}
               text={currentBroadcast.description}
+              url={currentBroadcast.audioUrl || currentBroadcast.link}
               label={t("listen.shareMessage")}
             />
           </div>
@@ -415,15 +505,13 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                           variant="ghost"
                           size="icon"
                           className="h-8 w-8"
-                          onClick={(e) => {
+                          disabled={
+                            isContentSaved(episode.id) ||
+                            downloadingId === episode.id
+                          }
+                          onClick={async (e) => {
                             e.stopPropagation();
-                            saveContent({
-                              id: episode.id,
-                              type: "audio",
-                              title: episode.title,
-                              date: episode.date,
-                              content: episode,
-                            });
+                            await downloadAudioFile(episode);
                           }}
                         >
                           {isContentSaved(episode.id) ? (
