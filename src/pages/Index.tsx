@@ -8,8 +8,10 @@ import { GiveTab } from "@/components/tabs/GiveTab";
 import { SearchDialog } from "@/components/SearchDialog";
 import { Snowfall } from "@/components/Snowfall";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { useTranslation } from "react-i18next";
 
 const Index = () => {
+  const { i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("read");
   const [searchOpen, setSearchOpen] = useState(false);
   const [christmasMode, setChristmasMode] = useState(false);
@@ -22,6 +24,13 @@ const Index = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab]);
+
+  // If Spanish is selected, avoid showing the watch tab
+  useEffect(() => {
+    if (i18n.language?.startsWith("es") && activeTab === "watch") {
+      setActiveTab("read");
+    }
+  }, [i18n.language, activeTab]);
 
   const handleNavigateToContent = (payload: { type: "devotional" | "audio" | "video"; id: string }) => {
     if (payload.type === "devotional") setActiveTab("read");
@@ -54,12 +63,14 @@ return (
       />
 
       <main className="pb-20 pt-4">
-        <div className={activeTab === "watch" ? "block" : "hidden"}>
-          <WatchTab
-            externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
-            onSelectionConsumed={clearSelection}
-          />
-        </div>
+        {!i18n.language?.startsWith("es") && (
+          <div className={activeTab === "watch" ? "block" : "hidden"}>
+            <WatchTab
+              externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
+              onSelectionConsumed={clearSelection}
+            />
+          </div>
+        )}
         <div className={activeTab === "listen" ? "block" : "hidden"}>
           <ListenTab
             externalSelection={pendingSelection?.type === "audio" ? pendingSelection : null}

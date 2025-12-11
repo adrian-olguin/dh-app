@@ -19,6 +19,7 @@ import { usePlaybackPositions } from "@/hooks/usePlaybackPosition";
 import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 interface Episode {
   id: string;
@@ -90,11 +91,18 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     }
 
     const fileName = `${sanitizeFileName(episode.title)}.mp3`;
+    const targetDirectory =
+      Capacitor.getPlatform() === "android" ? Directory.ExternalStorage : Directory.Documents;
+    const relativePath = `DailyHope/${fileName}`;
+
+    const filesystemAvailable =
+      Capacitor.isNativePlatform() &&
+      typeof (Filesystem as any)?.writeFile === "function";
 
     try {
       setDownloadingId(episode.id);
 
-      if (Capacitor.isNativePlatform()) {
+      if (filesystemAvailable) {
         let savedPath: string | null = null;
 
         try {
@@ -102,8 +110,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           if (typeof filesystemWithDownload?.downloadFile === "function") {
             const result = await filesystemWithDownload.downloadFile({
               url: episode.audioUrl,
-              directory: Directory.Documents,
-              path: `DailyHope/${fileName}`,
+              directory: targetDirectory,
+              path: relativePath,
               recursive: true,
             });
             savedPath = result?.path || result?.uri || null;
@@ -117,12 +125,28 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           const blob = await response.blob();
           const base64Data = await blobToBase64(blob);
           const result = await Filesystem.writeFile({
-            path: `DailyHope/${fileName}`,
+            path: relativePath,
             data: base64Data,
-            directory: Directory.Documents,
+            directory: targetDirectory,
             recursive: true,
+            encoding: "base64",
           });
           savedPath = result?.uri || result?.path || null;
+        }
+
+        // Confirm file exists and surface final path
+        try {
+          const stat = await Filesystem.stat({
+            path: relativePath,
+            directory: targetDirectory,
+          });
+          savedPath = stat.uri || savedPath;
+        } catch (statError) {
+          console.warn("stat failed after download", statError);
+        }
+
+        if (!savedPath) {
+          throw new Error("Download did not return a file path");
         }
 
         saveContent({
@@ -133,28 +157,49 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           content: { ...episode, localPath: savedPath || undefined },
         });
 
-        toast.success("Audio downloaded to Files app");
+        const locationHint =
+          Capacitor.getPlatform() === "android"
+            ? "Downloads/DailyHope"
+            : "Files → On My iPhone → DailyHope";
+        toast.success(`Audio saved (${locationHint})`);
+
+        // Optional: surface a share dialog to move the file if desired
+        try {
+          await Share.share({
+            title: episode.title,
+            text: "Audio downloaded from Daily Hope",
+            url: savedPath,
+          });
+        } catch (shareError) {
+          console.info("Share skipped/failed", shareError);
+        }
       } else {
-        const anchor = document.createElement("a");
-        anchor.href = episode.audioUrl;
-        anchor.download = fileName;
-        anchor.target = "_blank";
-        anchor.rel = "noopener";
-        anchor.click();
+        if (Capacitor.isNativePlatform()) {
+          toast.error("Download plugin unavailable. Rebuild after `npx cap sync`.");
+        } else {
+          const anchor = document.createElement("a");
+          anchor.href = episode.audioUrl;
+          anchor.download = fileName;
+          anchor.target = "_blank";
+          anchor.rel = "noopener";
+          anchor.click();
 
-        saveContent({
-          id: episode.id,
-          type: "audio",
-          title: episode.title,
-          date: episode.date,
-          content: episode,
-        });
+          saveContent({
+            id: episode.id,
+            type: "audio",
+            title: episode.title,
+            date: episode.date,
+            content: episode,
+          });
 
-        toast.success("Download started");
+          toast.success("Download started");
+        }
       }
     } catch (error) {
       console.error("Error downloading audio", error);
-      toast.error("Could not download audio");
+      const message =
+        error instanceof Error ? error.message : "Could not download audio";
+      toast.error(message);
     } finally {
       setDownloadingId(null);
     }

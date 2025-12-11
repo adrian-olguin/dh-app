@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { Play, Headphones, BookOpen, Heart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -8,14 +7,18 @@ interface TabNavigationProps {
 }
 
 export const TabNavigation = ({ activeTab, onTabChange }: TabNavigationProps) => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const isSpanish = i18n.language?.startsWith("es");
   
   const tabs = [
     { id: "read", label: t('tabs.read'), icon: BookOpen },
     { id: "listen", label: t('tabs.listen'), icon: Headphones },
-    { id: "watch", label: t('tabs.watch'), icon: Play },
     { id: "give", label: t('tabs.give'), icon: Heart },
   ];
+
+  if (!isSpanish) {
+    tabs.splice(2, 0, { id: "watch", label: t('tabs.watch'), icon: Play });
+  }
 
   return (
     <nav className="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-card/95 backdrop-blur-lg border-t border-border/50 z-50 safe-area-inset-bottom shadow-elevated transition-colors duration-300">
