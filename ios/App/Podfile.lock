@@ -1,6 +1,8 @@
 PODS:
   - Capacitor (7.4.4):
     - CapacitorCordova
+  - CapacitorBrowser (7.0.3):
+    - Capacitor
   - CapacitorClipboard (7.0.3):
     - Capacitor
   - CapacitorCordova (7.4.4)
@@ -11,6 +13,7 @@ PODS:
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorBrowser (from `../../node_modules/@capacitor/browser`)"
   - "CapacitorClipboard (from `../../node_modules/@capacitor/clipboard`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
   - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
@@ -19,6 +22,8 @@ DEPENDENCIES:
 EXTERNAL SOURCES:
   Capacitor:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorBrowser:
+    :path: "../../node_modules/@capacitor/browser"
   CapacitorClipboard:
     :path: "../../node_modules/@capacitor/clipboard"
   CapacitorCordova:
@@ -30,11 +35,12 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   Capacitor: 358dd1c3fdd71d969547b17e159fd8a7736cb45f
+  CapacitorBrowser: b98aa3db018a2ce4c68242d27e596c344f3b81b3
   CapacitorClipboard: 2a282bc14e8f47d430f2f9698ed95fbe25dcc21c
   CapacitorCordova: bf648a636f3c153f652d312ae145fb508b6ffced
   CapacitorFilesystem: e6261c410436f54908c11f94336c5b58286b1db0
   CapacitorShare: be166411fa995ead2d39b104aa0aae56d8615c66
 
-PODFILE CHECKSUM: 910286b1b6592a430be9514109b35edb84d4b04f
+PODFILE CHECKSUM: a1fcfd718a426a4a7ce2630bd59389d31d7a64af
 
 COCOAPODS: 1.16.2

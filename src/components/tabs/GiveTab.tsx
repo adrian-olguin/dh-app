@@ -8,6 +8,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "sonner";
 import { buildDonationUrl } from "@/lib/donations";
+import { Browser } from "@capacitor/browser";
+import { Capacitor } from "@capacitor/core";
 
 export const GiveTab = () => {
   const { t, i18n } = useTranslation();
@@ -49,34 +51,44 @@ export const GiveTab = () => {
     },
   ];
 
-  const handleDonation = () => {
-  const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
+  const handleDonation = async () => {
+    const amount = customAmount ? parseFloat(customAmount) : selectedAmount;
 
-  if (!amount || amount <= 0) {
-    toast.error(t("give.error.invalidAmount"));
-    return;
-  }
+    if (!amount || amount <= 0) {
+      toast.error(t("give.error.invalidAmount"));
+      return;
+    }
 
     setIsProcessing(true);
 
-  try {
-    const frequency = donationType === "monthly" ? "monthly" : "oneTime";
+    try {
+      const frequency = donationType === "monthly" ? "monthly" : "oneTime";
 
-    // If the UI is in Spanish, use the es-US locale for checkout
-    const locale = i18n.language === "es" ? "es-us" : undefined;
+      // If the UI is in Spanish, use the es-US locale for checkout
+      const locale = i18n.language === "es" ? "es-us" : undefined;
 
-    const url = buildDonationUrl(frequency, amount, locale);
+      const url = buildDonationUrl(frequency, amount, locale);
 
-    // Reset state before leaving the app
-    setIsProcessing(false);
+      // Reset state before opening browser
+      setIsProcessing(false);
 
-    window.location.href = url;
-  } catch (error) {
-    console.error("Error building donation URL:", error);
-    toast.error(t("give.error.processing"));
-    setIsProcessing(false);
-  }
-};
+      // Use Safari View Controller on native platforms, fallback to window.open on web
+      if (Capacitor.isNativePlatform()) {
+        await Browser.open({
+          url: url,
+          presentationStyle: 'fullscreen', // Keeps user in app context
+          toolbarColor: '#2950b8', // Match app theme
+        });
+      } else {
+        // Web fallback - open in new tab
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    } catch (error) {
+      console.error("Error opening checkout:", error);
+      toast.error(t("give.error.processing"));
+      setIsProcessing(false);
+    }
+  };
 
 
 
