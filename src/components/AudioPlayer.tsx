@@ -13,9 +13,11 @@ interface AudioPlayerProps {
   thumbnail: string;
   episodeId: string;
   onEnded?: () => void;
+  autoPlay?: boolean;
+  onAutoPlayConsumed?: () => void;
 }
 
-export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: AudioPlayerProps) => {
+export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded, autoPlay = false, onAutoPlayConsumed }: AudioPlayerProps) => {
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -26,15 +28,17 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const hasLoadedPosition = useRef(false);
+  const autoplayAttempted = useRef(false);
   const { loadPosition, savePosition, markCompleted } = usePlaybackPosition(episodeId);
 
-  // Reset when episode changes
+  // Reset when episode or audioUrl changes
   useEffect(() => {
     hasLoadedPosition.current = false;
+    autoplayAttempted.current = false;
     setIsLoading(true);
     setCurrentTime(0);
     setIsPlaying(false);
-  }, [episodeId]);
+  }, [episodeId, audioUrl]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -98,6 +102,51 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
     }
   }, [playbackRate]);
 
+  // Handle autoplay when autoPlay prop is true
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !autoPlay || isPlaying) return;
+
+    // Reset autoplay attempt flag when audioUrl changes (handled by the reset effect above)
+    
+    // Function to attempt playback
+    const attemptPlay = async () => {
+      if (autoplayAttempted.current) return;
+      autoplayAttempted.current = true;
+      
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        onAutoPlayConsumed?.();
+      } catch (error) {
+        console.error("Failed to autoplay audio:", error);
+        onAutoPlayConsumed?.();
+      }
+    };
+
+    // Check if audio is already ready to play
+    if (audio.readyState >= 2) {
+      // Audio has enough data, play immediately
+      attemptPlay();
+    } else {
+      // Wait for audio to be ready - canplay fires when there's enough data to start playing
+      const handleCanPlay = () => {
+        attemptPlay();
+      };
+      
+      // Use canplay event - fires when audio can start playing
+      audio.addEventListener("canplay", handleCanPlay, { once: true });
+      
+      // Also try canplaythrough for better reliability (more data buffered)
+      audio.addEventListener("canplaythrough", handleCanPlay, { once: true });
+      
+      return () => {
+        audio.removeEventListener("canplay", handleCanPlay);
+        audio.removeEventListener("canplaythrough", handleCanPlay);
+      };
+    }
+  }, [autoPlay, isPlaying, onAutoPlayConsumed, audioUrl]);
+
   const togglePlay = () => {
     if (audioRef.current && !isLoading) {
       if (isPlaying) {
@@ -155,10 +204,23 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded }: 
     return `${minutes}:${seconds.toString().padStart(2, "0")}`;
   };
 
+  // Force reload when audioUrl changes and ensure it starts loading
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (audio) {
+      // Update src if it's different
+      if (audio.src !== audioUrl) {
+        audio.src = audioUrl;
+      }
+      // Force reload to start loading immediately
+      audio.load();
+    }
+  }, [audioUrl]);
+
   return (
     <Card className="w-full bg-gradient-to-r from-primary/5 to-accent/5 border-2 border-primary/10">
       <CardContent className="p-4">
-        <audio ref={audioRef} src={audioUrl} preload="metadata" />
+        <audio ref={audioRef} src={audioUrl} preload="auto" />
         
         {/* Episode Info */}
         <div className="flex items-center gap-3 mb-4">

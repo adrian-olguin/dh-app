@@ -522,15 +522,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           return (
             <Card
               key={episode.id}
-              onClick={() => {
-                // User explicitly chose this episode – show it in the player AND auto-play it
-                setCurrentBroadcast(episode);
-                setAutoPlay(true);
-                // Scroll to top when episode is selected
-                window.scrollTo(0, 0);
-              }}
               className={cn(
-                "hover:shadow-soft transition-all cursor-pointer border-2 animate-slide-up overflow-hidden",
+                "hover:shadow-soft transition-all border-2 animate-slide-up overflow-hidden",
                 currentBroadcast?.id === episode.id
                   ? "border-primary"
                   : "border-transparent hover:border-accent/30"
@@ -557,14 +550,30 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                   />
                   <div className="absolute inset-0 bg-gradient-to-r from-black/40 to-transparent" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center">
-                      <Headphones className="w-5 h-5 text-primary" />
-                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        // Play button: autoplay without scrolling
+                        setCurrentBroadcast(episode);
+                        setAutoPlay(true);
+                      }}
+                      className="w-10 h-10 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors cursor-pointer"
+                    >
+                      <Play className="w-5 h-5 text-primary fill-primary ml-0.5" />
+                    </button>
                   </div>
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 py-3 pr-1">
+                <div 
+                  className="flex-1 py-3 pr-1 cursor-pointer"
+                  onClick={() => {
+                    // Content area: scroll to top without autoplaying
+                    setCurrentBroadcast(episode);
+                    setAutoPlay(false);
+                    window.scrollTo(0, 0);
+                  }}
+                >
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold text-foreground text-base line-clamp-2 flex-1">
                       {episode.title}
