@@ -14,6 +14,14 @@ export function buildDonationUrl(
 
   const base = `https://giving.pastorrick.com/cart/${variantId}:${quantity}`;
 
-  // If a locale is provided (e.g. "es-us"), append it as a query param
-  return locale ? `${base}?locale=${encodeURIComponent(locale)}` : base;
+  // Build query parameters
+  const params = new URLSearchParams();
+  params.set('cid', 'mobilegive'); // Always include mobile campaign identifier
+  
+  // If a locale is provided (e.g. "es-us"), add it as a query param
+  if (locale) {
+    params.set('locale', locale);
+  }
+
+  return `${base}?${params.toString()}`;
 }
