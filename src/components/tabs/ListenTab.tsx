@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Calendar, Headphones, Download } from "lucide-react";
+import { Play, Calendar, Headphones, Download, Check } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { ShareButton } from "@/components/ShareButton";
 // import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -181,15 +181,14 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
         toast.success(`Audio saved (${locationHint})`);
         downloadCompleted = true;
 
-        // Optional: surface a share dialog to move the file if desired
+        // Surface a share dialog to save/share the file
         try {
           await Share.share({
             title: episode.title,
-            text: "Audio downloaded from Daily Hope",
             url: savedPath,
           });
-        } catch (shareError) {
-          console.info("Share skipped/failed", shareError);
+        } catch {
+          // User canceled or dismissed the share dialog - this is fine
         }
       } else {
         if (Capacitor.isNativePlatform()) {

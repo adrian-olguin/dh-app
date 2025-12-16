@@ -58,7 +58,15 @@ export const ShareButton = ({
 
       toast.error(t("common.couldNotShare"));
     } catch (error: any) {
-      if (error?.name !== "AbortError") {
+      // Ignore user cancellation errors (different platforms use different error types)
+      const isCancellation =
+        error?.name === "AbortError" ||
+        error?.message?.toLowerCase?.().includes("cancel") ||
+        error?.message?.toLowerCase?.().includes("abort") ||
+        error?.message?.toLowerCase?.().includes("dismiss");
+      
+      if (!isCancellation) {
+        console.error("Share error:", error);
         toast.error(t("common.couldNotShare"));
       }
     }
