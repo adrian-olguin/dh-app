@@ -4,8 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTranslation } from "react-i18next";
-import { usePlaybackPosition } from "@/hooks/usePlaybackPosition";
-import { toast } from "sonner";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -27,13 +25,10 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded, au
   const [isMuted, setIsMuted] = useState(false);
   const [playbackRate, setPlaybackRate] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
-  const hasLoadedPosition = useRef(false);
   const autoplayAttempted = useRef(false);
-  const { loadPosition, savePosition, markCompleted } = usePlaybackPosition(episodeId);
 
   // Reset when episode or audioUrl changes
   useEffect(() => {
-    hasLoadedPosition.current = false;
     autoplayAttempted.current = false;
     setIsLoading(true);
     setCurrentTime(0);
@@ -46,36 +41,15 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded, au
 
     const handleTimeUpdate = () => {
       setCurrentTime(audio.currentTime);
-      // Save position periodically while playing
-      if (!audio.paused && duration > 0) {
-        savePosition(audio.currentTime, duration);
-      }
     };
 
-    const handleLoadedMetadata = async () => {
+    const handleLoadedMetadata = () => {
       setDuration(audio.duration);
-
-      // Load saved position only once when metadata is loaded
-      if (!hasLoadedPosition.current) {
-        hasLoadedPosition.current = true;
-        const savedPosition = await loadPosition();
-
-        if (savedPosition > 0) {
-          audio.currentTime = savedPosition;
-          setCurrentTime(savedPosition);
-          toast.success("Resuming from where you left off");
-        }
-
-        setIsLoading(false);
-
-      }
+      setIsLoading(false);
     };
-
 
     const handleEnded = () => {
       setIsPlaying(false);
-      markCompleted();
-      toast.success("Episode completed!");
       onEnded?.();
     };
 
@@ -88,7 +62,7 @@ export const AudioPlayer = ({ audioUrl, title, thumbnail, episodeId, onEnded, au
       audio.removeEventListener("loadedmetadata", handleLoadedMetadata);
       audio.removeEventListener("ended", handleEnded);
     };
-  }, [audioUrl, duration, loadPosition, savePosition, markCompleted, episodeId, onEnded]);
+  }, [audioUrl, duration, episodeId, onEnded]);
 
   useEffect(() => {
     if (audioRef.current) {

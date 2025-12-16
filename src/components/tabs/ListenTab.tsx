@@ -1,6 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Play, Calendar, Headphones, Download, Check } from "lucide-react";
+import { Play, Calendar, Headphones, Download } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { ShareButton } from "@/components/ShareButton";
 // import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -15,11 +15,8 @@ import { useTranslation } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
-import { usePlaybackPositions } from "@/hooks/usePlaybackPosition";
-import { useAuth } from "@/contexts/AuthContext";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
-import { Share } from "@capacitor/share";
 
 interface Episode {
   id: string;
@@ -44,13 +41,6 @@ interface PodcastResponse {
   link?: string;
 }
 
-interface PlaybackPositionState {
-  episode_id: string;
-  position: number;
-  duration: number;
-  completed: boolean;
-}
-
 interface ListenTabProps {
   externalSelection?: { type: "audio"; id: string } | null;
   onSelectionConsumed?: () => void;
@@ -58,13 +48,8 @@ interface ListenTabProps {
 
 export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabProps) => {
   const { t, i18n } = useTranslation();
-  const { user } = useAuth();
   const { saveContent } = useOfflineContent();
   const [currentBroadcast, setCurrentBroadcast] = useState<Episode | null>(null);
-  const { getPositions } = usePlaybackPositions();
-  const [playbackPositions, setPlaybackPositions] = useState<Map<string, PlaybackPositionState>>(
-    new Map()
-  );
   const [autoPlay, setAutoPlay] = useState(false); // 👈 NEW: request auto-play when user taps a tile
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [recentlyDownloadedIds, setRecentlyDownloadedIds] = useState<Set<string>>(new Set());
@@ -194,17 +179,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
             : "Files → On My iPhone → DailyHope";
         toast.success(`Audio saved (${locationHint})`);
         downloadCompleted = true;
-
-        // Optional: surface a share dialog to move the file if desired
-        try {
-          await Share.share({
-            title: episode.title,
-            text: "Audio downloaded from Daily Hope",
-            url: savedPath,
-          });
-        } catch (shareError) {
-          console.info("Share skipped/failed", shareError);
-        }
       } else {
         if (Capacitor.isNativePlatform()) {
           toast.error("Download plugin unavailable. Rebuild after `npx cap sync`.");
@@ -302,13 +276,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     }
   }, [episodes]);
 
-  // Load playback positions when episodes are loaded
-  useEffect(() => {
-    if (episodes.length > 0 && user) {
-      getPositions().then(setPlaybackPositions);
-    }
-  }, [episodes, user, getPositions]);
-
   useEffect(() => {
     if (externalSelection?.type === "audio" && episodes.length > 0) {
       const target = episodes.find((episode) => episode.id === externalSelection.id);
@@ -392,12 +359,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
     ? recentlyDownloadedIds.has(currentBroadcast.id)
     : false;
   const isCurrentDownloading = downloadingId === currentBroadcast?.id;
-  const currentPosition = playbackPositions.get(currentBroadcast.id);
-  const currentProgress =
-    currentPosition && currentPosition.duration > 0
-      ? (currentPosition.position / currentPosition.duration) * 100
-      : 0;
-  const isCurrentCompleted = currentPosition?.completed || false;
 
   return (
     <div className="pb-4 pt-4 px-4 max-w-md mx-auto">
@@ -409,16 +370,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
             <div className="flex items-center gap-2 text-muted-foreground text-xs">
               <Calendar className="w-3.5 h-3.5" />
               <span>{currentBroadcast.date}</span>
-              {currentProgress > 0 && !isCurrentCompleted && (
-                <span className="text-primary font-medium ml-1">
-                  • {Math.round(currentProgress)}%
-                </span>
-              )}
-              {isCurrentCompleted && (
-                <span className="flex items-center gap-1 text-primary font-medium ml-1">
-                  • <Check className="w-3 h-3" /> Completed
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-primary text-xs font-medium">
@@ -464,11 +415,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
           </h1>
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
             <span>{t("listen.pastor")}</span>
-            {currentProgress > 0 && !isCurrentCompleted && (
-              <span className="text-primary font-medium">
-                • Continue playing
-              </span>
-            )}
           </div>
           {currentBroadcast.description && (
             <p className="text-sm text-muted-foreground mb-6">
@@ -510,12 +456,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
 
       <div className="space-y-3">
         {episodes.slice(1, 61).map((episode, index) => {
-          const position = playbackPositions.get(episode.id);
-          const progress =
-            position && position.duration > 0
-              ? (position.position / position.duration) * 100
-              : 0;
-          const isCompleted = position?.completed || false;
           const isEpisodeDownloading = downloadingId === episode.id;
           const isEpisodeRecentlyDownloaded = recentlyDownloadedIds.has(episode.id);
 
@@ -531,16 +471,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
               style={{ animationDelay: `${index * 0.1}s` }}
             >
               <CardContent className="flex items-stretch gap-2 p-0 relative">
-                {/* Progress bar at bottom */}
-                {progress > 0 && !isCompleted && (
-                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-muted">
-                    <div
-                      className="h-full bg-primary transition-all duration-300"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                )}
-
                 {/* Thumbnail Image */}
                 <div className="relative w-28 flex-shrink-0 rounded-l-lg overflow-hidden">
                   <img
@@ -578,9 +508,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                     <p className="font-semibold text-foreground text-base line-clamp-2 flex-1">
                       {episode.title}
                     </p>
-                    {isCompleted && (
-                      <Check className="w-4 h-4 text-primary flex-shrink-0" />
-                    )}
                   </div>
                   <p className="text-[10px] text-muted-foreground mb-1 line-clamp-2">
                     {episode.description}
@@ -589,11 +516,6 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                     <p className="text-xs text-muted-foreground">
                       {episode.date}
                     </p>
-                    {progress > 0 && !isCompleted && (
-                      <p className="text-xs text-primary font-medium">
-                        {Math.round(progress)}%
-                      </p>
-                    )}
                   </div>
                 </div>
 

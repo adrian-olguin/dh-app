@@ -1,7 +1,5 @@
 import { Search, LogIn, Moon, Sun, Languages, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { UserMenu } from "@/components/UserMenu";
-import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
 import {
@@ -22,7 +20,6 @@ export const Header = ({
   christmasMode = false,
   onChristmasToggle,
 }: HeaderProps) => {
-  const { user } = useAuth();
   const { theme, setTheme } = useTheme();
   const { i18n } = useTranslation();
 
@@ -139,19 +136,15 @@ export const Header = ({
                 <Snowflake className="w-5 h-5" />
               </Button>
 
-              {/* User / Login */}
-              {user ? (
-                <UserMenu />
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => window.open("https://www.pastorrick.com/login", "_blank")}
-                  className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
-                >
-                  <LogIn className="w-5 h-5" />
-                </Button>
-              )}
+              {/* Login */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => window.open("https://www.pastorrick.com/login", "_blank")}
+                className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
+              >
+                <LogIn className="w-5 h-5" />
+              </Button>
             </div>
           </div>
         </div>
