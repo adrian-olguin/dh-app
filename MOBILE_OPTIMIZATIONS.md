@@ -1,6 +1,6 @@
 # Mobile Optimizations Applied
 
-This document outlines all mobile optimizations that have been implemented in the Daily Hope app to ensure it works perfectly on iOS Safari and as a native iOS app via Capacitor.
+This document outlines all mobile optimizations that have been implemented in the Daily Hope app to ensure it works perfectly on iOS Safari, Android Chrome, and as native iOS/Android apps via Capacitor.
 
 ## 1. Touch-Friendly Interactions
 
@@ -95,6 +95,10 @@ input, select, textarea {
 - `@capacitor/ios`
 - `@capacitor/android`
 
+**Native Platforms:**
+- `ios/` - Xcode project for iOS App Store
+- `android/` - Android Studio project for Google Play Store
+
 ## 5. Environment Variables
 
 All backend URLs use environment variables from `.env`:
@@ -152,6 +156,8 @@ Prevents the iOS long-press menu on links and images, providing a more app-like 
 
 ## Testing Checklist
 
+### iOS Testing
+
 When testing on iOS devices:
 
 ### Basic Functionality
@@ -192,9 +198,38 @@ When testing on iOS devices:
 - [ ] Dark mode transitions smoothly
 - [ ] Works offline
 
+### Android Testing
+
+When testing on Android devices:
+
+#### Basic Functionality
+- [ ] All navigation tabs work smoothly
+- [ ] Buttons provide visual feedback on tap
+- [ ] Back button navigation works correctly
+- [ ] No unexpected zoom on input focus
+
+#### Video & Audio
+- [ ] Video player controls work with touch
+- [ ] Fullscreen mode works
+- [ ] Audio continues when app is backgrounded
+- [ ] Playback position saves correctly
+
+#### Forms & Inputs
+- [ ] Keyboard appears without issues
+- [ ] Form validation works
+- [ ] Keyboard dismisses properly
+
+#### Android-Specific
+- [ ] App works on Android 6+ (API 23+)
+- [ ] Works on various screen sizes
+- [ ] Works on tablets
+- [ ] Hardware back button works
+- [ ] Share functionality uses Android share sheet
+- [ ] Dark mode follows system setting
+
 ## Known Limitations
 
-### WKWebView Restrictions
+### WKWebView Restrictions (iOS)
 - LocalStorage limited to 5MB
 - Some HTML5 features may be restricted
 - Service Workers behavior may differ from Safari
@@ -203,6 +238,16 @@ When testing on iOS devices:
 - Background execution is limited
 - Push notifications require Apple Developer setup
 - In-App Purchases require StoreKit integration
+
+### Android WebView Restrictions
+- LocalStorage limited based on available storage
+- Some CSS features may render differently
+- Service Workers fully supported on Android 7+
+
+### Android Specific
+- Background execution more flexible than iOS
+- Push notifications via Firebase Cloud Messaging
+- In-App Purchases require Google Play Billing integration
 
 ## Future Enhancements
 
@@ -216,7 +261,14 @@ Consider adding:
 
 ## Resources
 
+### iOS
 - [iOS Safari Web Standards](https://webkit.org/standards/)
 - [Capacitor iOS Documentation](https://capacitorjs.com/docs/ios)
 - [Apple Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
 - [WKWebView Limitations](https://developer.apple.com/documentation/webkit/wkwebview)
+
+### Android
+- [Capacitor Android Documentation](https://capacitorjs.com/docs/android)
+- [Material Design Guidelines](https://material.io/design)
+- [Android Developer Guides](https://developer.android.com/guide)
+- [Google Play Console Help](https://support.google.com/googleplay/android-developer)
