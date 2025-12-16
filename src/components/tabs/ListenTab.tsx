@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
+import { Share } from "@capacitor/share";
 
 interface Episode {
   id: string;
@@ -179,6 +180,17 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
             : "Files → On My iPhone → DailyHope";
         toast.success(`Audio saved (${locationHint})`);
         downloadCompleted = true;
+
+        // Optional: surface a share dialog to move the file if desired
+        try {
+          await Share.share({
+            title: episode.title,
+            text: "Audio downloaded from Daily Hope",
+            url: savedPath,
+          });
+        } catch (shareError) {
+          console.info("Share skipped/failed", shareError);
+        }
       } else {
         if (Capacitor.isNativePlatform()) {
           toast.error("Download plugin unavailable. Rebuild after `npx cap sync`.");
