@@ -2,6 +2,8 @@ import { Search, LogIn, Moon, Sun, Languages, Snowflake } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
+import { useState, useEffect } from "react";
+import { Capacitor } from "@capacitor/core";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +24,22 @@ export const Header = ({
 }: HeaderProps) => {
   const { theme, setTheme } = useTheme();
   const { i18n } = useTranslation();
+  const [isAndroid, setIsAndroid] = useState(false);
+
+  useEffect(() => {
+    // Detect if running on Android native app
+    setIsAndroid(Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android");
+  }, []);
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
   };
+
+  // Android status bar is typically 24-28dp; use 28px as safe default
+  // iOS uses env(safe-area-inset-top) which works natively
+  const topPadding = isAndroid 
+    ? "calc(28px + 12px)"  // 28px status bar + 12px padding
+    : "calc(env(safe-area-inset-top, 0px) + 12px)";
 
   return (
     <>
@@ -34,9 +48,9 @@ export const Header = ({
         className="sticky top-0 z-40 w-full bg-background shadow-md shadow-primary/5 border-b border-border transition-colors duration-300"
       >
         <div
-          className="px-4 py-3"
-          // Push header content down by safe-area, but keep background behind notch.
-          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+          className="px-4 pb-3"
+          // Push header content down by safe-area (iOS) or fixed amount (Android)
+          style={{ paddingTop: topPadding }}
         >
           <div className="flex items-center justify-between">
             {/* Left Spacer */}
