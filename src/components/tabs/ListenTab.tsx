@@ -388,8 +388,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                 <span>{t("listen.title")}</span>
               </div>
 
-              {/* Download Icon Button */}
-              <TooltipProvider>
+              {/* Download Icon Button - Hidden for now */}
+              {/* <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
@@ -416,7 +416,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                     </p>
                   </TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              </TooltipProvider> */}
             </div>
           </div>
 
@@ -530,8 +530,8 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                   </div>
                 </div>
 
-                {/* Download Button */}
-                <div className="pr-2">
+                {/* Download Button - Hidden for now */}
+                {/* <div className="pr-2">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -563,7 +563,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                </div>
+                </div> */}
               </CardContent>
             </Card>
           );

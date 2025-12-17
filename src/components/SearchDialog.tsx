@@ -62,6 +62,7 @@ type SupabasePodcast = {
   image_url?: string;
   audio_url?: string;
   published_at: string;
+  link?: string;
 };
 
 export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: SearchDialogProps) => {
@@ -117,8 +118,8 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
       }
 
       return (data.podcasts as SupabasePodcast[]).map((podcast) => ({
-        // Use published_at as stable id to align with ListenTab list
-        id: podcast.published_at || podcast.id,
+        // Use link as primary id to align with ListenTab list
+        id: podcast.link || podcast.published_at || podcast.id,
         title: podcast.title,
         description: podcast.description,
         // Duration in the feed is often missing; omit to avoid showing 0:00
