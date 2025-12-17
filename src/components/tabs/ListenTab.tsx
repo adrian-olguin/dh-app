@@ -250,7 +250,7 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
       }
 
       // Transform podcasts to Episode format
-      return (data.podcasts as PodcastResponse[]).map((podcast) => ({
+      const episodes = (data.podcasts as PodcastResponse[]).map((podcast) => ({
         // Prefer canonical link as id so search + tab match
         id: podcast.link || podcast.published_at || podcast.id,
         title: podcast.title,
@@ -269,6 +269,11 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
         published_at: podcast.published_at,
         link: podcast.link || podcast.audio_url || "",
       })) as Episode[];
+      
+      // Sort by published_at date (newest first)
+      episodes.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+      
+      return episodes;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,

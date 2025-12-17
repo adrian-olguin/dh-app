@@ -187,7 +187,7 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
       });
     }
     
-    itemStart = itemEnd + 60;
+    itemStart = itemEnd + 7; // Move just past </item> (7 characters)
   }
   
   console.log(`Parsed ${items.length} ${type} items from RSS feed`);

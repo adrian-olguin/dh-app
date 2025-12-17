@@ -98,7 +98,7 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
         throw new Error('Failed to fetch devotionals');
       }
       
-      return (data.articles as SupabaseArticle[]).map((article) => ({
+      const articles = (data.articles as SupabaseArticle[]).map((article) => ({
         // Prefer canonical link as id so search + tab match
         id: article.link || article.published_at || article.id,
         title: article.title,
@@ -114,6 +114,11 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
           day: 'numeric' 
         }),
       })) as Article[];
+      
+      // Sort by published_at date (newest first)
+      articles.sort((a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime());
+      
+      return articles;
     },
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
