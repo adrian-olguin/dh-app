@@ -67,7 +67,7 @@ type SupabasePodcast = {
 
 export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: SearchDialogProps) => {
   const { i18n } = useTranslation();
-  const { featuredVideo, recentVideos } = useWatchVideos();
+  const { featuredVideo, recentVideos, isLoading: loadingVideos } = useWatchVideos();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeTab, setActiveTab] = useState("all");
 
@@ -136,12 +136,14 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
 
   const videos: VideoResult[] = useMemo(
     () =>
-      [featuredVideo, ...recentVideos].map((video) => ({
-        id: video.id,
-        title: video.title,
-        duration: video.duration,
-        type: "video" as const,
-      })),
+      [featuredVideo, ...recentVideos]
+        .filter((video): video is NonNullable<typeof video> => video !== null)
+        .map((video) => ({
+          id: video.id,
+          title: video.title,
+          duration: video.duration,
+          type: "video" as const,
+        })),
     [featuredVideo, recentVideos]
   );
 
@@ -298,14 +300,14 @@ export const SearchDialog = ({ open, onOpenChange, onNavigateToContent }: Search
             </div>
 
             <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {(loadingDevotionals || loadingAudio) && (
+              {(loadingDevotionals || loadingAudio || loadingVideos) && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Loader2 className="w-4 h-4 animate-spin" />
                   Loading content from Read, Listen, and Watch…
                 </div>
               )}
 
-              {!loadingDevotionals && !loadingAudio && filteredResults.length === 0 && (
+              {!loadingDevotionals && !loadingAudio && !loadingVideos && filteredResults.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   No results found. Try another keyword.
                 </div>

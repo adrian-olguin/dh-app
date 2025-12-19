@@ -15,6 +15,7 @@ interface CacheEntry {
 
 const podcastCache: Map<string, CacheEntry> = new Map();
 const devotionalCache: Map<string, CacheEntry> = new Map();
+const tvCache: Map<string, CacheEntry> = new Map();
 
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
@@ -61,7 +62,7 @@ function extractAttribute(xml: string, tag: string, attribute: string, startInde
   return match ? match[1] : '';
 }
 
-async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
+async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional' | 'tv') {
   console.log(`Fetching ${type} RSS feed from:`, url);
   
   const response = await fetch(url);
@@ -170,6 +171,28 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional') {
         published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         type: 'podcast'
       });
+    } else if (type === 'tv') {
+      // For TV/video content, get video URL from enclosure or guid
+      const enclosureUrl = extractAttribute(itemXml, 'enclosure', 'url');
+      const guid = extractTagContent(itemXml, 'guid');
+      const duration = extractTagContent(itemXml, 'itunes:duration');
+      
+      // Video URL can be in enclosure or guid (YouTube/Vimeo links)
+      const videoUrl = enclosureUrl || guid || '';
+      
+      console.log(`TV video URL: ${videoUrl}, duration: ${duration}`);
+      
+      items.push({
+        id: stableId,
+        title: title || 'Untitled',
+        description: description || '',
+        video_url: videoUrl,
+        duration: duration || '0:00',
+        image_url: imageUrl || '',
+        link: link || videoUrl || '',
+        published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+        type: 'tv'
+      });
     } else {
       const content = extractTagContent(itemXml, 'content:encoded') || description;
       const verse = ''; // RSS doesn't have verse field, would need to parse from content
@@ -206,9 +229,19 @@ Deno.serve(async (req) => {
     const lang = language || 'en';
     const contentType = type || 'podcast';
     
-    // Determine cache and URL
-    const cache = contentType === 'podcast' ? podcastCache : devotionalCache;
+    // Determine cache based on content type
+    let cache: Map<string, CacheEntry>;
+    if (contentType === 'podcast') {
+      cache = podcastCache;
+    } else if (contentType === 'tv') {
+      cache = tvCache;
+    } else {
+      cache = devotionalCache;
+    }
     const cacheKey = `${contentType}-${lang}`;
+    
+    // Determine response key based on content type
+    const responseKey = contentType === 'podcast' ? 'podcasts' : contentType === 'tv' ? 'videos' : 'articles';
     
     // Check cache
     const now = Date.now();
@@ -218,7 +251,7 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           success: true, 
-          [contentType === 'podcast' ? 'podcasts' : 'articles']: cached.data 
+          [responseKey]: cached.data 
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -230,6 +263,9 @@ Deno.serve(async (req) => {
       rssUrl = lang === 'es' 
         ? 'https://www.pastorrick.com/rss/es/broadcast/feed'
         : 'https://www.pastorrick.com/rss/en/broadcast/feed';
+    } else if (contentType === 'tv') {
+      // TV feed - currently only English available
+      rssUrl = 'https://www.pastorrick.com/rss/en/tv/feed';
     } else {
       rssUrl = lang === 'es'
         ? 'https://www.pastorrick.com/rss/es/devotional/feed'
@@ -237,7 +273,7 @@ Deno.serve(async (req) => {
     }
     
     // Fetch and parse RSS
-    const items = await fetchRSSFeed(rssUrl, contentType);
+    const items = await fetchRSSFeed(rssUrl, contentType as 'podcast' | 'devotional' | 'tv');
     
     // Update cache
     cache.set(cacheKey, {
@@ -248,7 +284,7 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        [contentType === 'podcast' ? 'podcasts' : 'articles']: items
+        [responseKey]: items
       }),
       {
         headers: { 
@@ -266,7 +302,8 @@ Deno.serve(async (req) => {
         success: false, 
         error: errorMessage,
         podcasts: [],
-        articles: []
+        articles: [],
+        videos: []
       }),
       {
         status: 500,
