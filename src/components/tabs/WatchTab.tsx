@@ -8,6 +8,8 @@ import { VideoPlayer } from "@/components/VideoPlayer";
 import { useWatchVideos, WatchVideo } from "@/hooks/useWatchVideos";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 
 interface WatchTabProps {
   externalSelection?: { type: "video"; id: string } | null;
@@ -20,29 +22,34 @@ export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabPro
   const { featuredVideo, recentVideos, isLoading, error, refetch } = useWatchVideos();
   const [currentVideo, setCurrentVideo] = useState<WatchVideo | null>(null);
 
-  const handlePlayVideo = (video: { id: string | number; title: string; thumbnail: string; videoUrl: string }) => {
+  const handlePlayVideo = async (video: { id: string | number; title: string; thumbnail: string; videoUrl: string; duration?: string }) => {
     const url = video.videoUrl;
+    const isYouTubeOrVimeo = url.includes("youtube.com") || url.includes("youtu.be") || url.includes("vimeo.com");
+    const isNative = Capacitor.isNativePlatform();
 
-    if (url.includes("youtube.com") || url.includes("youtu.be")) {
-      // Web: open in new tab
-      window.open(url, "_blank");
-      // If you also run this in a native shell, you'd use Linking.openURL(url)
+    // On native platforms (iOS/Android), use in-app browser for YouTube/Vimeo
+    // This opens in Safari/Chrome view controller within the app
+    if (isNative && isYouTubeOrVimeo) {
+      try {
+        await Browser.open({ 
+          url,
+          presentationStyle: "popover",
+          toolbarColor: "#000000",
+        });
+      } catch (error) {
+        console.error("Failed to open browser:", error);
+        window.open(url, "_blank");
+      }
       return;
     }
 
-    if (url.includes("vimeo.com")) {
-      // Vimeo: open in new tab
-      window.open(url, "_blank");
-      return;
-    }
-
-    // Fallback: use internal HTML5 video player for direct .mp4 links
+    // On web or for direct MP4 links, use the in-app video player
     setCurrentVideo({
       id: String(video.id),
       title: video.title,
-      videoUrl: url,
+      videoUrl: video.videoUrl,
       thumbnail: video.thumbnail,
-      duration: "0:00",
+      duration: video.duration || "0:00",
     });
     setIsPlayerOpen(true);
   };
@@ -137,7 +144,7 @@ export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabPro
             
             {/* Title Section */}
             <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">{featuredVideo.title}</h1>
-            <p className="text-sm text-muted-foreground mb-6">{t('watch.pastor')}</p>
+            <p className="text-sm text-muted-foreground mb-6">{featuredVideo.date}</p>
             
             {/* Video Thumbnail */}
             <div className="relative rounded-xl overflow-hidden shadow-accent mb-6">
@@ -212,7 +219,7 @@ export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabPro
                   {/* Content */}
                   <div className="flex-1 py-4 pr-2">
                     <p className="font-semibold text-foreground text-base mb-1 line-clamp-2">{video.title}</p>
-                    <p className="text-xs text-muted-foreground">{t('watch.pastor')}</p>
+                    <p className="text-xs text-muted-foreground">{video.date}</p>
                   </div>
                 </CardContent>
               </Card>

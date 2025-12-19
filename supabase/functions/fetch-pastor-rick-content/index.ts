@@ -177,19 +177,23 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional' | 'tv') 
       const guid = extractTagContent(itemXml, 'guid');
       const duration = extractTagContent(itemXml, 'itunes:duration');
       
-      // Video URL can be in enclosure or guid (YouTube/Vimeo links)
-      const videoUrl = enclosureUrl || guid || '';
+      // Video URL is typically in the guid for YouTube/Vimeo links, or in enclosure
+      // The guid contains the actual video URL (e.g., https://youtu.be/eHnbCHyMP0o)
+      const videoUrl = guid || enclosureUrl || '';
       
-      console.log(`TV video URL: ${videoUrl}, duration: ${duration}`);
+      // Use guid as ID for TV items since 'link' is the same for all items in the feed
+      const tvId = guid || (pubDate ? new Date(pubDate).toISOString() : `tv-${items.length}-${Date.now()}`);
+      
+      console.log(`TV item: title="${title}", videoUrl="${videoUrl}", duration="${duration}"`);
       
       items.push({
-        id: stableId,
+        id: tvId,
         title: title || 'Untitled',
         description: description || '',
         video_url: videoUrl,
         duration: duration || '0:00',
         image_url: imageUrl || '',
-        link: link || videoUrl || '',
+        link: videoUrl || link || '',
         published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         type: 'tv'
       });
