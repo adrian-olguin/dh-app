@@ -62,6 +62,41 @@ function extractAttribute(xml: string, tag: string, attribute: string, startInde
   return match ? match[1] : '';
 }
 
+// Helper function to strip HTML tags and get plain text
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, ' ')  // Remove HTML tags
+    .replace(/&nbsp;/g, ' ')   // Replace &nbsp;
+    .replace(/&amp;/g, '&')    // Replace &amp;
+    .replace(/&lt;/g, '<')     // Replace &lt;
+    .replace(/&gt;/g, '>')     // Replace &gt;
+    .replace(/&quot;/g, '"')   // Replace &quot;
+    .replace(/&#39;/g, "'")    // Replace &#39;
+    .replace(/\s+/g, ' ')      // Collapse whitespace
+    .trim();
+}
+
+// Helper function to create an excerpt from content
+function createExcerpt(content: string, maxLength = 200): string {
+  const plainText = stripHtml(content);
+  if (plainText.length <= maxLength) return plainText;
+  
+  // Find a good break point (end of sentence or word)
+  let excerpt = plainText.substring(0, maxLength);
+  const lastPeriod = excerpt.lastIndexOf('.');
+  const lastSpace = excerpt.lastIndexOf(' ');
+  
+  if (lastPeriod > maxLength * 0.6) {
+    excerpt = excerpt.substring(0, lastPeriod + 1);
+  } else if (lastSpace > 0) {
+    excerpt = excerpt.substring(0, lastSpace) + '...';
+  } else {
+    excerpt += '...';
+  }
+  
+  return excerpt;
+}
+
 async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional' | 'tv') {
   console.log(`Fetching ${type} RSS feed from:`, url);
   
@@ -201,10 +236,22 @@ async function fetchRSSFeed(url: string, type: 'podcast' | 'devotional' | 'tv') 
       const content = extractTagContent(itemXml, 'content:encoded') || description;
       const verse = ''; // RSS doesn't have verse field, would need to parse from content
       
+      // Create excerpt from description or content
+      // Spanish RSS feed has description with just Bible verse references (e.g., "Juan 8:36")
+      // which are too short to be useful excerpts, so we check length
+      let excerpt = '';
+      if (description && description.length > 50) {
+        // Use description if it's long enough to be a real excerpt
+        excerpt = description;
+      } else if (content) {
+        // Otherwise extract excerpt from content
+        excerpt = createExcerpt(content, 200);
+      }
+      
       items.push({
         id: stableId,
         title: title || 'Untitled',
-        excerpt: description || '',
+        excerpt: excerpt || '',
         content: content || '',
         verse: verse,
         image_url: imageUrl || '',

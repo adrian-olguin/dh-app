@@ -144,7 +144,10 @@ export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabPro
             
             {/* Title Section */}
             <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">{featuredVideo.title}</h1>
-            <p className="text-sm text-muted-foreground mb-6">{featuredVideo.date}</p>
+            {featuredVideo.description && (
+              <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{featuredVideo.description}</p>
+            )}
+            <p className="text-xs text-muted-foreground mb-6">{featuredVideo.date}</p>
             
             {/* Video Thumbnail */}
             <div className="relative rounded-xl overflow-hidden shadow-accent mb-6">
@@ -219,6 +222,9 @@ export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabPro
                   {/* Content */}
                   <div className="flex-1 py-4 pr-2">
                     <p className="font-semibold text-foreground text-base mb-1 line-clamp-2">{video.title}</p>
+                    {video.description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2 mb-1">{video.description}</p>
+                    )}
                     <p className="text-xs text-muted-foreground">{video.date}</p>
                   </div>
                 </CardContent>

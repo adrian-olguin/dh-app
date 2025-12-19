@@ -261,7 +261,10 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
           
           {/* Title Section */}
           <h1 className="text-2xl font-bold text-foreground mb-1 leading-tight">{articles[0].title}</h1>
-          <p className="text-sm text-muted-foreground mb-6">{t('read.pastor')}</p>
+          {articles[0].excerpt && (
+            <p className="text-sm text-muted-foreground line-clamp-2 mb-2">{articles[0].excerpt}</p>
+          )}
+          <p className="text-xs text-muted-foreground mb-6">{articles[0].date}</p>
           
           {articles[0].image_url && (
             <img src={articles[0].image_url} alt={articles[0].title} className="w-full h-48 object-cover rounded-lg mb-6" />
