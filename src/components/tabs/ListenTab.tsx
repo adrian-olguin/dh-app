@@ -45,9 +45,10 @@ interface PodcastResponse {
 interface ListenTabProps {
   externalSelection?: { type: "audio"; id: string } | null;
   onSelectionConsumed?: () => void;
+  resetKey?: number;
 }
 
-export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabProps) => {
+export const ListenTab = ({ externalSelection, onSelectionConsumed, resetKey }: ListenTabProps) => {
   const { t, i18n } = useTranslation();
   const { saveContent } = useOfflineContent();
   const [currentBroadcast, setCurrentBroadcast] = useState<Episode | null>(null);
@@ -55,6 +56,18 @@ export const ListenTab = ({ externalSelection, onSelectionConsumed }: ListenTabP
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [recentlyDownloadedIds, setRecentlyDownloadedIds] = useState<Set<string>>(new Set());
   const downloadIndicatorTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  
+  // Reset to home view when resetKey changes (tab clicked)
+  // Note: We don't reset currentBroadcast to null here because
+  // it would cause "No episodes available" to flash before the
+  // episodes effect re-sets it. The scroll to top is sufficient
+  // to return to the "home" view of the Listen tab.
+  useEffect(() => {
+    if (resetKey !== undefined) {
+      setAutoPlay(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [resetKey]);
 
   const showDownloadedIndicator = (episodeId: string, durationMs = 4000) => {
     setRecentlyDownloadedIds((prev) => {

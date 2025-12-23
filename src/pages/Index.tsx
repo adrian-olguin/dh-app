@@ -17,6 +17,14 @@ const Index = () => {
     type: "devotional" | "audio" | "video";
     id: string;
   } | null>(null);
+  
+  // Reset keys for each tab - incremented when user clicks on an active tab to reset it
+  const [resetKeys, setResetKeys] = useState({
+    read: 0,
+    listen: 0,
+    watch: 0,
+    give: 0,
+  });
 
   // Scroll to top when tab changes
   useEffect(() => {
@@ -29,6 +37,15 @@ const Index = () => {
       setActiveTab("read");
     }
   }, [i18n.language, activeTab]);
+
+  const handleTabChange = (tab: string) => {
+    // Always reset the tab to its home state when clicked
+    setResetKeys(prev => ({
+      ...prev,
+      [tab]: prev[tab as keyof typeof prev] + 1
+    }));
+    setActiveTab(tab);
+  };
 
   const handleNavigateToContent = (payload: { type: "devotional" | "audio" | "video"; id: string }) => {
     if (payload.type === "devotional") setActiveTab("read");
@@ -60,6 +77,7 @@ const Index = () => {
               <WatchTab
                 externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
                 onSelectionConsumed={clearSelection}
+                resetKey={resetKeys.watch}
               />
             </div>
           )}
@@ -67,12 +85,14 @@ const Index = () => {
             <ListenTab
               externalSelection={pendingSelection?.type === "audio" ? pendingSelection : null}
               onSelectionConsumed={clearSelection}
+              resetKey={resetKeys.listen}
             />
           </div>
           <div className={activeTab === "read" ? "block" : "hidden"}>
             <ReadTab
               externalSelection={pendingSelection?.type === "devotional" ? pendingSelection : null}
               onSelectionConsumed={clearSelection}
+              resetKey={resetKeys.read}
             />
           </div>
           <div className={activeTab === "give" ? "block" : "hidden"}>
@@ -80,7 +100,7 @@ const Index = () => {
           </div>
         </main>
 
-        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+        <TabNavigation activeTab={activeTab} onTabChange={handleTabChange} />
       </div>
     </ErrorBoundary>
   );

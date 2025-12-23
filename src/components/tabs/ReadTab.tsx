@@ -38,6 +38,7 @@ interface SupabaseArticle {
 interface ReadTabProps {
   externalSelection?: { type: "devotional"; id: string } | null;
   onSelectionConsumed?: () => void;
+  resetKey?: number;
 }
 
 // Helper function to construct devotional URL from title and date
@@ -66,11 +67,24 @@ const getShareUrl = (article: { link: string; title: string; published_at: strin
   return constructDevotionalUrl(article.title, article.published_at, language);
 };
 
-export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps) => {
+export const ReadTab = ({ externalSelection, onSelectionConsumed, resetKey }: ReadTabProps) => {
   const { t, i18n } = useTranslation();
   const { saveContent, isContentSaved } = useOfflineContent();
   const [fontSize, setFontSize] = useState(15);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  
+  // Reset to home view when language changes
+  useEffect(() => {
+    setSelectedArticle(null);
+  }, [i18n.language]);
+  
+  // Reset to home view when resetKey changes (tab clicked)
+  useEffect(() => {
+    if (resetKey !== undefined) {
+      setSelectedArticle(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [resetKey]);
   
   const getLocale = () => {
     switch (i18n.language) {
@@ -255,7 +269,7 @@ export const ReadTab = ({ externalSelection, onSelectionConsumed }: ReadTabProps
             </div>
             <div className="flex items-center gap-2 text-primary text-xs font-medium">
               <BookOpen className="w-3.5 h-3.5" />
-              <span>Today's Devotional</span>
+              <span>{t('read.todaysDevotional')}</span>
             </div>
           </div>
           

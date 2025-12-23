@@ -14,13 +14,23 @@ import { Browser } from "@capacitor/browser";
 interface WatchTabProps {
   externalSelection?: { type: "video"; id: string } | null;
   onSelectionConsumed?: () => void;
+  resetKey?: number;
 }
 
-export const WatchTab = ({ externalSelection, onSelectionConsumed }: WatchTabProps) => {
+export const WatchTab = ({ externalSelection, onSelectionConsumed, resetKey }: WatchTabProps) => {
   const { t } = useTranslation();
   const [isPlayerOpen, setIsPlayerOpen] = useState(false);
   const { featuredVideo, recentVideos, isLoading, error, refetch } = useWatchVideos();
   const [currentVideo, setCurrentVideo] = useState<WatchVideo | null>(null);
+  
+  // Reset to home view when resetKey changes (tab clicked)
+  useEffect(() => {
+    if (resetKey !== undefined) {
+      setIsPlayerOpen(false);
+      setCurrentVideo(null);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [resetKey]);
 
   const handlePlayVideo = async (video: { id: string | number; title: string; thumbnail: string; videoUrl: string; duration?: string }) => {
     const url = video.videoUrl;
