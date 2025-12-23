@@ -6,7 +6,6 @@ import { ListenTab } from "@/components/tabs/ListenTab";
 import { ReadTab } from "@/components/tabs/ReadTab";
 import { GiveTab } from "@/components/tabs/GiveTab";
 import { SearchDialog } from "@/components/SearchDialog";
-import { Snowfall } from "@/components/Snowfall";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { useTranslation } from "react-i18next";
 
@@ -14,7 +13,6 @@ const Index = () => {
   const { i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("read");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [christmasMode, setChristmasMode] = useState(false);
   const [pendingSelection, setPendingSelection] = useState<{
     type: "devotional" | "audio" | "video";
     id: string;
@@ -42,58 +40,50 @@ const Index = () => {
 
   const clearSelection = () => setPendingSelection(null);
 
-return (
-  <ErrorBoundary
-    fallbackTitle="Page Error"
-    fallbackDescription="This page encountered an error. Try navigating to another section."
-  >
-    <div className="min-h-screen bg-background">
-      {christmasMode && <Snowfall />}
+  return (
+    <ErrorBoundary
+      fallbackTitle="Page Error"
+      fallbackDescription="This page encountered an error. Try navigating to another section."
+    >
+      <div className="min-h-screen bg-background">
+        <SearchDialog
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          onNavigateToContent={handleNavigateToContent}
+        />
 
-      <SearchDialog
-        open={searchOpen}
-        onOpenChange={setSearchOpen}
-        onNavigateToContent={handleNavigateToContent}
-      />
+        <Header onSearchClick={() => setSearchOpen(true)} />
 
-      <Header
-        onSearchClick={() => setSearchOpen(true)}
-        christmasMode={christmasMode}
-        onChristmasToggle={() => setChristmasMode(!christmasMode)}
-      />
-
-      <main className="pb-20 pt-4">
-        {!i18n.language?.startsWith("es") && (
-          <div className={activeTab === "watch" ? "block" : "hidden"}>
-            <WatchTab
-              externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
+        <main className="pb-20 pt-4">
+          {!i18n.language?.startsWith("es") && (
+            <div className={activeTab === "watch" ? "block" : "hidden"}>
+              <WatchTab
+                externalSelection={pendingSelection?.type === "video" ? pendingSelection : null}
+                onSelectionConsumed={clearSelection}
+              />
+            </div>
+          )}
+          <div className={activeTab === "listen" ? "block" : "hidden"}>
+            <ListenTab
+              externalSelection={pendingSelection?.type === "audio" ? pendingSelection : null}
               onSelectionConsumed={clearSelection}
             />
           </div>
-        )}
-        <div className={activeTab === "listen" ? "block" : "hidden"}>
-          <ListenTab
-            externalSelection={pendingSelection?.type === "audio" ? pendingSelection : null}
-            onSelectionConsumed={clearSelection}
-          />
-        </div>
-        <div className={activeTab === "read" ? "block" : "hidden"}>
-          <ReadTab
-            externalSelection={pendingSelection?.type === "devotional" ? pendingSelection : null}
-            onSelectionConsumed={clearSelection}
-          />
-        </div>
-        <div className={activeTab === "give" ? "block" : "hidden"}>
-          <GiveTab />
-        </div>
-      </main>
+          <div className={activeTab === "read" ? "block" : "hidden"}>
+            <ReadTab
+              externalSelection={pendingSelection?.type === "devotional" ? pendingSelection : null}
+              onSelectionConsumed={clearSelection}
+            />
+          </div>
+          <div className={activeTab === "give" ? "block" : "hidden"}>
+            <GiveTab />
+          </div>
+        </main>
 
-      <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
-    </div>
-  </ErrorBoundary>
-);
-
-
+        <TabNavigation activeTab={activeTab} onTabChange={setActiveTab} />
+      </div>
+    </ErrorBoundary>
+  );
 };
 
 export default Index;

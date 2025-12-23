@@ -1,4 +1,4 @@
-import { Search, LogIn, Moon, Sun, Languages, Snowflake } from "lucide-react";
+import { Search, Moon, Sun, Globe, Type } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "next-themes";
 import { useTranslation } from "react-i18next";
@@ -10,26 +10,57 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Slider } from "@/components/ui/slider";
 
 interface HeaderProps {
   onSearchClick?: () => void;
-  christmasMode?: boolean;
-  onChristmasToggle?: () => void;
 }
+
+// Default font size is 100%, range from 80% to 140%
+const MIN_FONT_SIZE = 80;
+const MAX_FONT_SIZE = 140;
+const DEFAULT_FONT_SIZE = 100;
+const FONT_SIZE_KEY = "app-font-size";
 
 export const Header = ({
   onSearchClick,
-  christmasMode = false,
-  onChristmasToggle,
 }: HeaderProps) => {
   const { theme, setTheme } = useTheme();
   const { i18n } = useTranslation();
   const [isAndroid, setIsAndroid] = useState(false);
+  const [fontSize, setFontSize] = useState(DEFAULT_FONT_SIZE);
 
   useEffect(() => {
     // Detect if running on Android native app
     setIsAndroid(Capacitor.isNativePlatform() && Capacitor.getPlatform() === "android");
+    
+    // Load saved font size from localStorage
+    const savedFontSize = localStorage.getItem(FONT_SIZE_KEY);
+    if (savedFontSize) {
+      const size = parseInt(savedFontSize, 10);
+      if (size >= MIN_FONT_SIZE && size <= MAX_FONT_SIZE) {
+        setFontSize(size);
+        applyFontSize(size);
+      }
+    }
   }, []);
+
+  const applyFontSize = (size: number) => {
+    // Apply font size to the html element to scale all rem-based sizes
+    document.documentElement.style.fontSize = `${size}%`;
+  };
+
+  const handleFontSizeChange = (value: number[]) => {
+    const newSize = value[0];
+    setFontSize(newSize);
+    applyFontSize(newSize);
+    localStorage.setItem(FONT_SIZE_KEY, String(newSize));
+  };
 
   const changeLanguage = (lng: string) => {
     i18n.changeLanguage(lng);
@@ -53,37 +84,8 @@ export const Header = ({
           style={{ paddingTop: topPadding }}
         >
           <div className="flex items-center justify-between">
-            {/* Left Spacer */}
-            <div className="flex-1" />
-
-            {/* Logo */}
-            <div className="relative">
-              {christmasMode && (
-                <>
-                  <div className="absolute -top-2 -left-2 w-3 h-3 rounded-full bg-red-500 animate-blink" />
-                  <div
-                    className="absolute -top-2 left-8 w-3 h-3 rounded-full bg-green-500 animate-blink"
-                    style={{ animationDelay: "0.5s" }}
-                  />
-                  <div
-                    className="absolute -top-2 right-8 w-3 h-3 rounded-full bg-yellow-500 animate-blink"
-                    style={{ animationDelay: "1s" }}
-                  />
-                  <div
-                    className="absolute -top-2 -right-2 w-3 h-3 rounded-full bg-blue-500 animate-blink"
-                    style={{ animationDelay: "1.5s" }}
-                  />
-                  <div
-                    className="absolute top-10 -left-2 w-3 h-3 rounded-full bg-yellow-500 animate-blink"
-                    style={{ animationDelay: "0.75s" }}
-                  />
-                  <div
-                    className="absolute top-10 -right-2 w-3 h-3 rounded-full bg-red-500 animate-blink"
-                    style={{ animationDelay: "1.25s" }}
-                  />
-                </>
-              )}
-
+            {/* Logo on the left */}
+            <div className="flex-1">
               <img
                 src="/images/daily-hope-logo.png"
                 alt="Daily Hope"
@@ -92,7 +94,7 @@ export const Header = ({
             </div>
 
             {/* Right Icon Row */}
-            <div className="flex-1 flex justify-end gap-0.5">
+            <div className="flex items-center gap-0.5">
               {/* Search */}
               <Button
                 variant="ghost"
@@ -103,7 +105,7 @@ export const Header = ({
                 <Search className="w-5 h-5" />
               </Button>
 
-              {/* Language Selector */}
+              {/* Language Selector - Globe icon */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
@@ -111,7 +113,7 @@ export const Header = ({
                     size="icon"
                     className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
                   >
-                    <Languages className="w-5 h-5" />
+                    <Globe className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -124,7 +126,48 @@ export const Header = ({
                 </DropdownMenuContent>
               </DropdownMenu>
 
-              {/* Light/Dark Mode */}
+              {/* Text Size - moved before dark mode */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
+                  >
+                    <Type className="w-6 h-6" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-64">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">Text Size</span>
+                      <span className="text-sm text-muted-foreground">{fontSize}%</span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-muted-foreground">A</span>
+                      <Slider
+                        value={[fontSize]}
+                        onValueChange={handleFontSizeChange}
+                        min={MIN_FONT_SIZE}
+                        max={MAX_FONT_SIZE}
+                        step={5}
+                        className="flex-1"
+                      />
+                      <span className="text-lg font-bold text-muted-foreground">A</span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => handleFontSizeChange([DEFAULT_FONT_SIZE])}
+                    >
+                      Reset to Default
+                    </Button>
+                  </div>
+                </PopoverContent>
+              </Popover>
+
+              {/* Light/Dark Mode - now at the end */}
               <Button
                 variant="ghost"
                 size="icon"
@@ -136,28 +179,6 @@ export const Header = ({
                 ) : (
                   <Moon className="w-5 h-5" />
                 )}
-              </Button>
-
-              {/* Christmas Mode */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={onChristmasToggle}
-                className={`active:bg-primary/20 h-10 w-10 ${
-                  christmasMode ? "text-red-500" : "text-primary"
-                } touch-manipulation`}
-              >
-                <Snowflake className="w-5 h-5" />
-              </Button>
-
-              {/* Login */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => window.open("https://www.pastorrick.com/login", "_blank")}
-                className="active:bg-primary/20 h-10 w-10 text-primary touch-manipulation"
-              >
-                <LogIn className="w-5 h-5" />
               </Button>
             </div>
           </div>
