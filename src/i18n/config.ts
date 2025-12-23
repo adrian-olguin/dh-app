@@ -10,6 +10,23 @@ const resources = {
         darkMode: "Toggle dark mode",
         language: "Change language"
       },
+      search: {
+        placeholder: "Find what you need",
+        clear: "Clear",
+        all: "All",
+        devotionals: "Devos",
+        audio: "Audio",
+        videos: "Videos",
+        showing: "Showing",
+        result: "result",
+        results: "results",
+        loading: "Loading content from Read, Listen, and Watch…",
+        noResults: "No results found. Try another keyword.",
+        open: "Open",
+        devotional: "devotional",
+        audioType: "audio",
+        video: "video"
+      },
       tabs: {
         listen: "Listen",
         watch: "Watch",
@@ -177,6 +194,23 @@ const resources = {
         login: "Iniciar sesión",
         darkMode: "Alternar modo oscuro",
         language: "Cambiar idioma"
+      },
+      search: {
+        placeholder: "Encuentra lo que necesitas",
+        clear: "Borrar",
+        all: "Todos",
+        devotionals: "Devos",
+        audio: "Audio",
+        videos: "Videos",
+        showing: "Mostrando",
+        result: "resultado",
+        results: "resultados",
+        loading: "Cargando contenido de Leer y Escuchar…",
+        noResults: "No se encontraron resultados. Intenta otra palabra clave.",
+        open: "Abrir",
+        devotional: "devocional",
+        audioType: "audio",
+        video: "video"
       },
       tabs: {
         listen: "Escuchar",
